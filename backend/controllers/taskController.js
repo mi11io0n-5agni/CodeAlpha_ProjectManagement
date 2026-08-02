@@ -42,7 +42,9 @@ export const createTask = async (req,res)=>{
 
     });
 
+    const io = req.app.get("io");
 
+    io.to(projectId).emit("taskCreated", task);
     res.status(201).json({
 
       success:true,
@@ -124,6 +126,9 @@ export const updateTaskStatus = async(req,res)=>{
 
    await task.save();
 
+   // Send real-time update
+    const io = req.app.get("io");
+    io.to(task.project.toString()).emit("taskUpdated", task);
 
    res.status(200).json({
      success:true,

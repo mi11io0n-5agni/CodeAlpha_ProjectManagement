@@ -28,6 +28,9 @@ export const addComment = async (req, res) => {
       text,
     });
 
+    const io = req.app.get("io");
+    io.emit("newComment", comment);
+
     await comment.populate("user", "name email");
 
     res.status(201).json({

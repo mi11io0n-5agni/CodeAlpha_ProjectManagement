@@ -1,0 +1,32 @@
+.board-task {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  cursor: grab;
+  box-shadow: 0 3px 8px rgba(0,0,0,.08);
+  transition: .3s;
+}
+
+.board-task:hover{
+  transform: translateY(-3px);
+}
+
+.board-task h4{
+  margin:0 0 10px;
+}
+
+.board-task p{
+  color:#6b7280;
+  font-size:14px;
+}
+
+.priority{
+  display:inline-block;
+  margin-top:10px;
+  background:#2563eb;
+  color:white;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+}
