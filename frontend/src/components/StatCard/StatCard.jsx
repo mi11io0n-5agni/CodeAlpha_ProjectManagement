@@ -1,16 +1,21 @@
 import "./StatCard.css";
 
-function StatCard({ title, value, color }) {
+function StatCard({
+  title,
+  value,
+  color = "#2563eb",
+}) {
   return (
     <div className="stat-card">
       <div
-        className="stat-line"
+        className="stat-card-line"
         style={{ backgroundColor: color }}
       ></div>
 
-      <div className="stat-content">
-        <h3>{title}</h3>
-        <h1>{value}</h1>
+      <div className="stat-card-content">
+        <h2>{value}</h2>
+
+        <p>{title}</p>
       </div>
     </div>
   );

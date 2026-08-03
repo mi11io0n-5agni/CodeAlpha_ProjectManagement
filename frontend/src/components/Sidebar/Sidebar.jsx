@@ -1,56 +1,55 @@
-import {
-  Dashboard,
-  Folder,
-  Assignment,
-  People,
-  Person,
-  Logout,
-} from "@mui/icons-material";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 function Sidebar() {
+  const navigate = useNavigate();
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
         <h2>TaskFlow</h2>
       </div>
 
-      <nav className="sidebar-menu">
-
-        <NavLink to="/dashboard" className="menu-item">
-          <Dashboard />
-          <span>Dashboard</span>
+      <nav className="sidebar-nav">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Dashboard
         </NavLink>
 
-        <NavLink to="/projects" className="menu-item">
-          <Folder />
-          <span>Projects</span>
+        <NavLink
+          to="/projects"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Projects
         </NavLink>
 
-        <NavLink to="/tasks" className="menu-item">
-          <Assignment />
-          <span>Tasks</span>
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Profile
         </NavLink>
-
-        <NavLink to="/members" className="menu-item">
-          <People />
-          <span>Members</span>
-        </NavLink>
-
-        <NavLink to="/profile" className="menu-item">
-          <Person />
-          <span>Profile</span>
-        </NavLink>
-
       </nav>
 
-      <div className="sidebar-footer">
-        <button className="logout-btn">
-          <Logout />
-          Logout
-        </button>
-      </div>
+      <button
+        className="logout-btn"
+        onClick={logout}
+      >
+        Logout
+      </button>
     </aside>
   );
 }

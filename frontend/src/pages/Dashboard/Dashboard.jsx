@@ -1,14 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import CreateProjectModal from "../../components/CreateProjectModal/CreateProjectModal";
+import StatCard from "../../components/StatCard/StatCard";
+
+import { getProjects } from "../../services/projectService";
+
 import "./Dashboard.css";
 
 function Dashboard() {
   const [openModal, setOpenModal] = useState(false);
 
-  const handleProjectCreated = () => {
-    alert("Project created successfully!");
+  const [projects, setProjects] = useState([]);
+
+  const loadProjects = async () => {
+    try {
+      const data = await getProjects();
+      setProjects(data.projects);
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
 
   return (
     <div className="dashboard">
@@ -23,38 +39,45 @@ function Dashboard() {
             + New Project
           </button>
 
-          <Link to="/projects" className="projects-btn">
+          <Link
+            to="/projects"
+            className="projects-btn"
+          >
             View Projects
           </Link>
         </div>
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
-          <h2>0</h2>
-          <p>Total Projects</p>
-        </div>
+        <StatCard
+          title="Projects"
+          value={projects.length}
+          color="#2563eb"
+        />
 
-        <div className="stat-card">
-          <h2>0</h2>
-          <p>Total Tasks</p>
-        </div>
+        <StatCard
+          title="Tasks"
+          value={0}
+          color="#10b981"
+        />
 
-        <div className="stat-card">
-          <h2>0</h2>
-          <p>Completed Tasks</p>
-        </div>
+        <StatCard
+          title="Completed"
+          value={0}
+          color="#f59e0b"
+        />
 
-        <div className="stat-card">
-          <h2>0</h2>
-          <p>Team Members</p>
-        </div>
+        <StatCard
+          title="Members"
+          value={0}
+          color="#ef4444"
+        />
       </div>
 
       <CreateProjectModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        onProjectCreated={handleProjectCreated}
+        onProjectCreated={loadProjects}
       />
     </div>
   );

@@ -1,0 +1,56 @@
+.project-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition: 0.3s;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.15);
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.status {
+  background: #dbeafe;
+  color: #2563eb;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.description {
+  margin: 18px 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.project-info p {
+  margin: 8px 0;
+}
+
+.open-btn {
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  background: #2563eb;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.open-btn:hover {
+  background: #1d4ed8;
+}

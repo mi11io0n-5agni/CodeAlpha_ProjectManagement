@@ -1,49 +1,41 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+
+import ProjectCard from "../../components/ProjectCard/ProjectCard";
 import { getProjects } from "../../services/projectService";
+
 import "./Projects.css";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const loadProjects = async () => {
+    try {
+      const data = await getProjects();
+      setProjects(data.projects);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     loadProjects();
   }, []);
 
-  const loadProjects = async () => {
-    try {
-      const data = await getProjects();
-      setProjects(data.projects || []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <h2>Loading...</h2>;
-  }
-
   return (
     <div className="projects-page">
-      <div className="projects-header">
-        <h1>Projects</h1>
-      </div>
+      <h1>My Projects</h1>
 
       <div className="projects-grid">
-        {projects.map((project) => (
-          <Link
-            key={project._id}
-            to={`/projects/${project._id}`}
-            className="project-card"
-          >
-            <h3>{project.name}</h3>
-
-            <p>{project.description}</p>
-          </Link>
-        ))}
+        {projects.length === 0 ? (
+          <p>No projects found.</p>
+        ) : (
+          projects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+            />
+          ))
+        )}
       </div>
     </div>
   );

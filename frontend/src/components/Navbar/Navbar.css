@@ -1,50 +1,64 @@
 .navbar {
-  height: 70px;
-
+  height: 75px;
+  background: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  padding: 0 30px;
-
-  background: white;
-
-  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  padding: 0 35px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .navbar-left h2 {
   margin: 0;
+  color: #111827;
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 25px;
 }
 
-.search-box {
-  width: 280px;
-
-  padding: 10px 15px;
-
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  outline: none;
-}
-
-.user-avatar {
-  width: 42px;
-  height: 42px;
-
+.notification-btn {
+  width: 45px;
+  height: 45px;
+  border: none;
   border-radius: 50%;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 18px;
+  transition: 0.3s;
+}
 
-  background: #2563eb;
+.notification-btn:hover {
+  background: #e5e7eb;
+}
 
-  color: white;
-
+.user-info {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+}
 
+.avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: bold;
+  font-size: 18px;
+}
+
+.user-info h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.user-info span {
+  color: #6b7280;
+  font-size: 13px;
 }
