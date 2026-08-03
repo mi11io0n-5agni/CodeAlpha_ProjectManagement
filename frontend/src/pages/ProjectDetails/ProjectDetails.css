@@ -1,3 +1,35 @@
-.project-details-page {
-  padding: 2rem;
+.project-details {
+  padding: 30px;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.project-header h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.project-header p {
+  margin-top: 6px;
+  color: #666;
+}
+
+.add-task-btn {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-task-btn:hover {
+  background: #1d4ed8;
 }

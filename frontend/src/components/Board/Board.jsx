@@ -5,7 +5,7 @@ import { getProjectTasks } from "../../services/taskService";
 
 import "./Board.css";
 
-function Board({ projectId }) {
+function Board({ projectId, refresh }) {
   const [tasks, setTasks] = useState([]);
 
   const loadTasks = async () => {
@@ -18,10 +18,10 @@ function Board({ projectId }) {
   };
 
   useEffect(() => {
-    if (projectId) {
-      loadTasks();
-    }
-  }, [projectId]);
+  if (projectId) {
+    loadTasks();
+  }
+}, [projectId, refresh]);
 
   const todo = tasks.filter(
     (task) => task.status === "todo"
@@ -44,21 +44,26 @@ function Board({ projectId }) {
       <BoardColumn
         title="Todo"
         tasks={todo}
+        onDeleted={loadTasks}
       />
 
       <BoardColumn
         title="In Progress"
         tasks={progress}
+        onDeleted={loadTasks}
       />
 
       <BoardColumn
         title="Review"
         tasks={review}
+        onDeleted={loadTasks}
       />
+      
 
       <BoardColumn
         title="Done"
         tasks={done}
+        onDeleted={loadTasks}
       />
     </div>
   );

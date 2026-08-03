@@ -1,7 +1,7 @@
 import BoardTask from "../BoardTask/BoardTask";
 import "./BoardColumn.css";
 
-function BoardColumn({ title, tasks }) {
+function BoardColumn({title,tasks,onDeleted,}) {
   return (
     <div className="board-column">
       <div className="column-header">
@@ -16,10 +16,11 @@ function BoardColumn({ title, tasks }) {
         </p>
       ) : (
         tasks.map((task) => (
-          <BoardTask
-            key={task._id}
-            task={task}
-          />
+      <BoardTask
+          key={task._id}
+          task={task}
+          onDeleted={onDeleted}
+      />
         ))
       )}
     </div>

@@ -109,8 +109,6 @@ export const getProjectTasks = async(req,res)=>{
 
 };
 
-
-
 // Update Task Status
 export const updateTaskStatus = async(req,res)=>{
 
@@ -180,4 +178,41 @@ task.status = req.body.status;
 
  }
 
+};
+// Delete Task
+export const deleteTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    await task.deleteOne();
+
+    const io = req.app.get("io");
+
+    io.to(task.project.toString()).emit(
+      "taskDeleted",
+      task._id
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Task deleted successfully",
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
 };
