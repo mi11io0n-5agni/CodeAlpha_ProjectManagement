@@ -179,6 +179,59 @@ task.status = req.body.status;
  }
 
 };
+
+// Update Task
+export const updateTask = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      priority,
+      status,
+      dueDate,
+      assignedTo,
+    } = req.body;
+
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    task.title = title ?? task.title;
+    task.description = description ?? task.description;
+    task.priority = priority ?? task.priority;
+    task.status = status ?? task.status;
+    task.dueDate = dueDate ?? task.dueDate;
+    task.assignedTo = assignedTo ?? task.assignedTo;
+
+    await task.save();
+
+    const io = req.app.get("io");
+
+    io.to(task.project.toString()).emit("taskUpdated", task);
+
+    res.status(200).json({
+      success: true,
+      message: "Task updated successfully",
+      task,
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+};
+
 // Delete Task
 export const deleteTask = async (req, res) => {
   try {

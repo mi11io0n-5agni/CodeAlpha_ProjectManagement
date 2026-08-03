@@ -4,9 +4,9 @@ import {
   createTask,
   getProjectTasks,
   updateTaskStatus,
+  updateTask,
   deleteTask,
 } from "../controllers/taskController.js";
-
 import protect from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -23,6 +23,11 @@ router.put(
  "/:id",
  protect,
  updateTaskStatus
+);
+router.put(
+  "/update/:id",
+  protect,
+  updateTask
 );
 router.delete(
   "/:id",
