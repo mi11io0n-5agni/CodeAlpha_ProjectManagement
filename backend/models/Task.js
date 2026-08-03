@@ -1,5 +1,18 @@
 import mongoose from "mongoose";
 
+const TASK_STATUS = [
+  "todo",
+  "in-progress",
+  "review",
+  "done",
+];
+
+const TASK_PRIORITY = [
+  "low",
+  "medium",
+  "high",
+];
+
 const taskSchema = new mongoose.Schema(
   {
     title: {
@@ -33,21 +46,13 @@ const taskSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "todo",
-        "in-progress",
-        "completed"
-      ],
+      enum: TASK_STATUS,
       default: "todo",
     },
 
     priority: {
       type: String,
-      enum: [
-        "low",
-        "medium",
-        "high"
-      ],
+      enum: TASK_PRIORITY,
       default: "medium",
     },
 
@@ -60,7 +65,6 @@ const taskSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
 
 const Task = mongoose.model("Task", taskSchema);
 

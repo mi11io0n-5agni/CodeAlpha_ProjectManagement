@@ -8,12 +8,9 @@ import {
 
 import protect from "../middleware/authMiddleware.js";
 
-
 const router = express.Router();
 
-
 router.post("/", protect, createTask);
-
 
 router.get(
  "/project/:projectId",
@@ -21,12 +18,10 @@ router.get(
  getProjectTasks
 );
 
-
 router.put(
  "/:id",
  protect,
  updateTaskStatus
 );
-
 
 export default router;

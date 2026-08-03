@@ -22,3 +22,9 @@
   justify-content:center;
   align-items:center;
 }
+.empty-column {
+  text-align: center;
+  color: #888;
+  margin-top: 20px;
+  font-size: 14px;
+}

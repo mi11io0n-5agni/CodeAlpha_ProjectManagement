@@ -1,12 +1,9 @@
 import Task from "../models/Task.js";
 import Project from "../models/Project.js";
 
-
 // Create Task
 export const createTask = async (req,res)=>{
-
   try{
-
     const {
       title,
       description,
@@ -16,6 +13,19 @@ export const createTask = async (req,res)=>{
       dueDate
     } = req.body;
 
+    if (!title) {
+  return res.status(400).json({
+    success: false,
+    message: "Task title is required",
+  });
+}
+
+if (!projectId) {
+  return res.status(400).json({
+    success: false,
+    message: "Project ID is required",
+  });
+}
 
     const project = await Project.findById(projectId);
 
@@ -66,8 +76,6 @@ export const createTask = async (req,res)=>{
   }
 
 };
-
-
 
 
 // Get Tasks of Project
@@ -121,10 +129,34 @@ export const updateTaskStatus = async(req,res)=>{
    }
 
 
-   task.status = req.body.status;
+   const allowedStatus = [
+  "todo",
+  "in-progress",
+  "review",
+  "done",
+];
+
+if (!allowedStatus.includes(req.body.status)) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid task status",
+  });
+}
+
+task.status = req.body.status;
 
 
-   await task.save();
+  await task.save();
+
+  await task.populate(
+      "assignedTo",
+      "name email"
+    );
+
+    await task.populate(
+      "createdBy",
+      "name email"
+    );
 
    // Send real-time update
     const io = req.app.get("io");

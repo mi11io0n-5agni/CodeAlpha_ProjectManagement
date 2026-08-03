@@ -1,42 +1,46 @@
-import "./Board.css";
+import { useEffect, useState } from "react";
 
 import BoardColumn from "../BoardColumn/BoardColumn";
+import { getProjectTasks } from "../../services/taskService";
 
-function Board() {
+import "./Board.css";
 
-  const todo = [
-    {
-      id:1,
-      title:"Design Login",
-      description:"Create login page",
-      priority:"High"
+function Board({ projectId }) {
+  const [tasks, setTasks] = useState([]);
+
+  const loadTasks = async () => {
+    try {
+      const data = await getProjectTasks(projectId);
+      setTasks(data.tasks);
+    } catch (error) {
+      console.error(error);
     }
-  ];
+  };
 
-  const progress = [
-    {
-      id:2,
-      title:"API Integration",
-      description:"Connect frontend",
-      priority:"Medium"
+  useEffect(() => {
+    if (projectId) {
+      loadTasks();
     }
-  ];
+  }, [projectId]);
 
-  const review = [];
+  const todo = tasks.filter(
+    (task) => task.status === "todo"
+  );
 
-  const done = [
-    {
-      id:3,
-      title:"Authentication",
-      description:"Backend completed",
-      priority:"Done"
-    }
-  ];
+  const progress = tasks.filter(
+    (task) => task.status === "in-progress"
+  );
+
+  const review = tasks.filter(
+    (task) => task.status === "review"
+  );
+
+  const done = tasks.filter(
+    (task) => task.status === "done"
+  );
 
   return (
-
     <div className="board">
-
       <BoardColumn
         title="Todo"
         tasks={todo}
@@ -56,9 +60,7 @@ function Board() {
         title="Done"
         tasks={done}
       />
-
     </div>
-
   );
 }
 
