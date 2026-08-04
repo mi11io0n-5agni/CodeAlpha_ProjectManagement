@@ -1,27 +1,65 @@
 import { useEffect, useState } from "react";
 
+import { DragDropContext } from "@hello-pangea/dnd";
+
 import BoardColumn from "../BoardColumn/BoardColumn";
-import { getProjectTasks } from "../../services/taskService";
+
+import {
+  getProjectTasks,
+  updateTaskStatus,
+} from "../../services/taskService";
 
 import "./Board.css";
 
-function Board({ projectId, refresh }) {
+function Board({ projectId }) {
   const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [projectId]);
 
   const loadTasks = async () => {
     try {
       const data = await getProjectTasks(projectId);
+
       setTasks(data.tasks);
+
     } catch (error) {
+
       console.error(error);
+
     }
   };
 
-  useEffect(() => {
-  if (projectId) {
-    loadTasks();
-  }
-}, [projectId, refresh]);
+  const handleDragEnd = async (result) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const newStatus = destination.droppableId;
+
+    try {
+
+      await updateTaskStatus(
+        draggableId,
+        newStatus
+      );
+
+      loadTasks();
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+  };
 
   const todo = tasks.filter(
     (task) => task.status === "todo"
@@ -40,32 +78,41 @@ function Board({ projectId, refresh }) {
   );
 
   return (
-    <div className="board">
-      <BoardColumn
-        title="Todo"
-        tasks={todo}
-        onDeleted={loadTasks}
-      />
+    <DragDropContext
+      onDragEnd={handleDragEnd}
+    >
+      <div className="board">
 
-      <BoardColumn
-        title="In Progress"
-        tasks={progress}
-        onDeleted={loadTasks}
-      />
+        <BoardColumn
+          title="Todo"
+          status="todo"
+          tasks={todo}
+          reloadTasks={loadTasks}
+        />
 
-      <BoardColumn
-        title="Review"
-        tasks={review}
-        onDeleted={loadTasks}
-      />
-      
+        <BoardColumn
+          title="In Progress"
+          status="in-progress"
+          tasks={progress}
+          reloadTasks={loadTasks}
+        />
 
-      <BoardColumn
-        title="Done"
-        tasks={done}
-        onDeleted={loadTasks}
-      />
-    </div>
+        <BoardColumn
+          title="Review"
+          status="review"
+          tasks={review}
+          reloadTasks={loadTasks}
+        />
+
+        <BoardColumn
+          title="Done"
+          status="done"
+          tasks={done}
+          reloadTasks={loadTasks}
+        />
+
+      </div>
+    </DragDropContext>
   );
 }
 

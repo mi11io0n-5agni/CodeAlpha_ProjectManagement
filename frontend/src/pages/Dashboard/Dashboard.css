@@ -1,53 +1,321 @@
 .dashboard {
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  animation: fadeIn 0.5s ease;
 }
 
-.dashboard-header {
+/* ===========================
+   Hero Section
+=========================== */
+
+.dashboard-hero {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-radius: 20px;
+  padding: 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  gap: 30px;
+  box-shadow: 0 18px 45px rgba(37, 99, 235, 0.25);
 }
 
-.dashboard-actions {
+.dashboard-hero h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.dashboard-hero p {
+  margin-top: 12px;
+  opacity: 0.95;
+  max-width: 600px;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.dashboard-buttons {
   display: flex;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 .create-btn,
 .projects-btn {
-  padding: 12px 20px;
+  padding: 13px 22px;
+  border-radius: 10px;
   border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: #fff;
   text-decoration: none;
   cursor: pointer;
   font-size: 15px;
+  font-weight: 600;
   transition: 0.3s;
 }
 
-.create-btn:hover,
-.projects-btn:hover {
-  background: #1d4ed8;
+.create-btn {
+  background: white;
+  color: #2563eb;
 }
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  background: #f8fafc;
+}
+
+.projects-btn {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,.25);
+}
+
+.projects-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ===========================
+   Stat Cards
+=========================== */
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4,1fr);
+  gap: 22px;
 }
 
-.stat-card {
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+/* ===========================
+   Dashboard Grid
+=========================== */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 25px;
 }
 
-.stat-card h2 {
+/* ===========================
+   Cards
+=========================== */
+
+.dashboard-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(15,23,42,.07);
+  transition: .3s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(15,23,42,.12);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.card-header a {
+  text-decoration: none;
   color: #2563eb;
-  font-size: 2rem;
-  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.card-header a:hover {
+  text-decoration: underline;
+}
+
+/* ===========================
+   List Items
+=========================== */
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+}
+
+.list-item p {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ===========================
+   Project Tag
+=========================== */
+
+.project-tag {
+  background: #dbeafe;
+  color: #2563eb;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ===========================
+   Status Badges
+=========================== */
+
+.status {
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status.todo {
+  background: #3b82f6;
+}
+
+.status.in-progress {
+  background: #f59e0b;
+}
+
+.status.review {
+  background: #8b5cf6;
+}
+
+.status.done {
+  background: #10b981;
+}
+
+/* ===========================
+   Empty State
+=========================== */
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* ===========================
+   Progress Card
+=========================== */
+
+.progress-card {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 14px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 18px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #10b981,
+    #22c55e
+  );
+  transition: width .5s ease;
+}
+
+.progress-text {
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* ===========================
+   Animation
+=========================== */
+
+@keyframes fadeIn {
+
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width:1200px){
+
+  .stats-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media (max-width:992px){
+
+  .dashboard-hero{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .dashboard-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media (max-width:768px){
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .dashboard{
+    gap:20px;
+  }
+
+  .dashboard-hero{
+    padding:28px;
+  }
+
+  .dashboard-hero h1{
+    font-size:1.8rem;
+  }
+
+  .dashboard-buttons{
+    width:100%;
+  }
+
+  .create-btn,
+  .projects-btn{
+    flex:1;
+    text-align:center;
+  }
+
 }

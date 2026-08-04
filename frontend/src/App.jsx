@@ -30,7 +30,7 @@ function App() {
           <Route path="/projects" element={<Projects />} />
 
           <Route
-            path="/projects/:id"
+            path="/projects/:projectId"
             element={<ProjectDetails />}
           />
 

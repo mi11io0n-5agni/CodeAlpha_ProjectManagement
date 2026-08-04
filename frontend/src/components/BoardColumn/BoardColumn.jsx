@@ -1,29 +1,42 @@
+import { Droppable } from "@hello-pangea/dnd";
+
 import BoardTask from "../BoardTask/BoardTask";
+
 import "./BoardColumn.css";
 
-function BoardColumn({title,tasks,onDeleted,}) {
+function BoardColumn({
+  title,
+  status,
+  tasks,
+  reloadTasks,
+}) {
   return (
-    <div className="board-column">
-      <div className="column-header">
-        <h3>{title}</h3>
+    <Droppable droppableId={status}>
+      {(provided) => (
+        <div
+          className="board-column"
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+        >
+          <div className="column-header">
+            <h3>{title}</h3>
 
-        <span>{tasks.length}</span>
-      </div>
+            <span>{tasks.length}</span>
+          </div>
 
-      {tasks.length === 0 ? (
-        <p className="empty-column">
-          No tasks
-        </p>
-      ) : (
-        tasks.map((task) => (
-      <BoardTask
-          key={task._id}
-          task={task}
-          onDeleted={onDeleted}
-      />
-        ))
+          {tasks.map((task, index) => (
+            <BoardTask
+              key={task._id}
+              task={task}
+              index={index}
+              onDeleted={reloadTasks}
+            />
+          ))}
+
+          {provided.placeholder}
+        </div>
       )}
-    </div>
+    </Droppable>
   );
 }
 

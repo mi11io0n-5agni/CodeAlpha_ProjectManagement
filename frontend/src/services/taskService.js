@@ -23,7 +23,7 @@ export const updateTaskStatus = async (taskId, status) => {
 
 export const updateTask = async (taskId, taskData) => {
   const { data } = await API.put(
-    `/tasks/edit/${taskId}`,
+    `/tasks/update/${taskId}`,
     taskData
   );
 

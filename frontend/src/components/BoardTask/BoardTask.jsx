@@ -1,12 +1,18 @@
 import { useState } from "react";
 
+import { Draggable } from "@hello-pangea/dnd";
+
 import EditTaskModal from "../EditTaskModal/EditTaskModal";
 
 import { deleteTask } from "../../services/taskService";
 
 import "./BoardTask.css";
 
-function BoardTask({ task, onDeleted }) {
+function BoardTask({
+  task,
+  index,
+  onDeleted,
+}) {
   const [openEdit, setOpenEdit] = useState(false);
 
   const handleDelete = async () => {
@@ -20,9 +26,13 @@ function BoardTask({ task, onDeleted }) {
       await deleteTask(task._id);
 
       onDeleted();
+
     } catch (error) {
+
       console.error(error);
+
       alert("Failed to delete task.");
+
     }
   };
 
@@ -34,47 +44,58 @@ function BoardTask({ task, onDeleted }) {
 
   return (
     <>
-      <div className="board-task">
-
-        <div className={`priority-badge ${task.priority}`}>
-          {task.priority?.toUpperCase()}
-        </div>
-
-        <h4>{task.title}</h4>
-
-        <p>{task.description || "No description"}</p>
-
-        <div className="task-info">
-
-          <div>
-            👤 {task.assignedTo?.name || "Unassigned"}
-          </div>
-
-          <div>
-            📅 {formatDate(task.dueDate)}
-          </div>
-
-        </div>
-
-        <div className="task-actions">
-
-          <button
-            className="edit-btn"
-            onClick={() => setOpenEdit(true)}
+      <Draggable
+        draggableId={task._id}
+        index={index}
+      >
+        {(provided) => (
+          <div
+            className="board-task"
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
           >
-            Edit
-          </button>
+            <div className={`priority-badge ${task.priority}`}>
+              {task.priority?.toUpperCase()}
+            </div>
 
-          <button
-            className="delete-btn"
-            onClick={handleDelete}
-          >
-            Delete
-          </button>
+            <h4>{task.title}</h4>
 
-        </div>
+            <p>{task.description || "No description"}</p>
 
-      </div>
+            <div className="task-info">
+
+              <div>
+                👤 {task.assignedTo?.name || "Unassigned"}
+              </div>
+
+              <div>
+                📅 {formatDate(task.dueDate)}
+              </div>
+
+            </div>
+
+            <div className="task-actions">
+
+              <button
+                className="edit-btn"
+                onClick={() => setOpenEdit(true)}
+              >
+                Edit
+              </button>
+
+              <button
+                className="delete-btn"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </div>
+        )}
+      </Draggable>
 
       <EditTaskModal
         open={openEdit}

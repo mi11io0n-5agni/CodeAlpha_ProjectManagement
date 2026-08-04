@@ -7,10 +7,9 @@ import CreateTaskModal from "../../components/CreateTaskModal/CreateTaskModal";
 import "./ProjectDetails.css";
 
 function ProjectDetails() {
-  const { id } = useParams();
+  const { projectId } = useParams();
 
   const [openModal, setOpenModal] = useState(false);
-
   const [refresh, setRefresh] = useState(false);
 
   const handleTaskCreated = () => {
@@ -37,14 +36,14 @@ function ProjectDetails() {
       </div>
 
       <Board
-        projectId={id}
+        projectId={projectId}
         refresh={refresh}
       />
 
       <CreateTaskModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        projectId={id}
+        projectId={projectId}
         onTaskCreated={handleTaskCreated}
       />
 
