@@ -1,17 +1,48 @@
 .layout {
   display: flex;
-}
-
-.main-content {
-  margin-left: 260px;
-
-  width: calc(100% - 260px);
-
   min-height: 100vh;
-
   background: #f5f7fb;
 }
 
+.main-content {
+  flex: 1 1 auto;
+  min-height: 100vh;
+  transition: margin-left 0.28s ease, filter 0.28s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content.drawer-open {
+  /* when sidebar is open as a drawer on small screens */
+  filter: brightness(0.98);
+}
+
 .page-content {
-  padding: 30px;
+  padding: 28px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+/* Desktop: reserve space for fixed sidebar */
+@media (min-width: 992px) {
+  .main-content { margin-left: 250px; }
+  .page-content { padding: 36px; }
+}
+
+/* Laptop */
+@media (min-width: 768px) and (max-width: 991px) {
+  .main-content { margin-left: 80px; }
+  .page-content { padding: 26px; }
+}
+
+/* Mobile / Tablet: drawer behavior */
+@media (max-width: 767px) {
+  .main-content { margin-left: 0; }
+  .page-content { padding: 18px; }
 }

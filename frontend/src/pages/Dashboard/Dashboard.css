@@ -319,3 +319,21 @@
   }
 
 }
+
+@media(max-width:768px){
+
+.dashboard-hero{
+
+text-align:center;
+
+align-items:center;
+
+}
+
+.dashboard-buttons{
+
+justify-content:center;
+
+}
+
+}

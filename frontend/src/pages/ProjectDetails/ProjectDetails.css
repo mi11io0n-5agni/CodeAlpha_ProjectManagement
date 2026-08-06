@@ -1,35 +1,35 @@
-.project-details {
-  padding: 30px;
+.project-details{
+padding:20px;
 }
 
-.project-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+.project-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:20px;
+
+margin-bottom:30px;
+
 }
 
-.project-header h1 {
-  margin: 0;
-  font-size: 30px;
+@media(max-width:768px){
+
+.project-header{
+
+flex-direction:column;
+
+align-items:flex-start;
+
 }
 
-.project-header p {
-  margin-top: 6px;
-  color: #666;
+.add-task-btn{
+
+width:100%;
+
 }
 
-.add-task-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.add-task-btn:hover {
-  background: #1d4ed8;
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 import { Draggable } from "@hello-pangea/dnd";
 
@@ -31,7 +32,7 @@ function BoardTask({
 
       console.error(error);
 
-      alert("Failed to delete task.");
+      toast.error("Failed to delete task.");
 
     }
   };

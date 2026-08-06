@@ -1,31 +1,25 @@
 .board{
 
-    display:grid;
+display:flex;
 
-    grid-template-columns:
-    repeat(4,1fr);
+gap:20px;
 
-    gap:20px;
+overflow-x:auto;
 
-    margin-top:30px;
-}
-
-@media(max-width:1200px){
-
-.board{
-
-grid-template-columns:repeat(2,1fr);
+padding-bottom:15px;
 
 }
 
-}
+.board::-webkit-scrollbar{
 
-@media(max-width:700px){
-
-.board{
-
-grid-template-columns:1fr;
+height:8px;
 
 }
+
+.board::-webkit-scrollbar-thumb{
+
+background:#cbd5e1;
+
+border-radius:20px;
 
 }

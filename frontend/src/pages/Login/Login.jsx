@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../../services/authService";
+import { toast } from "react-toastify";
 import "./Login.css";
 
 function Login() {
@@ -31,11 +32,12 @@ function Login() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
+      toast.success("Signed in successfully.");
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
           "Login failed."
       );

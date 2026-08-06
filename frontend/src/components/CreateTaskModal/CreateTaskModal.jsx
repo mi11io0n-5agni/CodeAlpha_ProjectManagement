@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createTask } from "../../services/taskService";
+import { toast } from "react-toastify";
 import "./CreateTaskModal.css";
 
 function CreateTaskModal({
@@ -46,11 +47,12 @@ function CreateTaskModal({
         dueDate: "",
       });
 
+      toast.success("Task created.");
       onTaskCreated();
       onClose();
     } catch (error) {
       console.error(error);
-      alert("Failed to create task.");
+      toast.error("Failed to create task.");
     } finally {
       setLoading(false);
     }

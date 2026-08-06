@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../../services/authService";
+import { toast } from "react-toastify";
 import "./Register.css";
 
 function Register() {
@@ -26,7 +27,8 @@ function Register() {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      return alert("Passwords do not match.");
+      toast.warning("Passwords do not match.");
+      return;
     }
 
     try {
@@ -41,10 +43,11 @@ function Register() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
+      toast.success("Registration successful.");
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
-      alert(
+      toast.error(
         error.response?.data?.message ||
           "Registration failed."
       );
