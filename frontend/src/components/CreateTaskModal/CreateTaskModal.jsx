@@ -50,6 +50,7 @@ function CreateTaskModal({
       toast.success("Task created.");
       onTaskCreated();
       onClose();
+      toast.success("Task created successfully.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to create task.");

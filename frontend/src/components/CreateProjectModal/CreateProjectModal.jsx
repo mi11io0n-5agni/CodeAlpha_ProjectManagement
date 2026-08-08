@@ -37,6 +37,7 @@ const [form, setForm] = useState({
       toast.success("Project created.");
       onProjectCreated();
       onClose();
+      toast.success("Project created successfully.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to create project.");

@@ -27,8 +27,7 @@ function Register() {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      toast.warning("Passwords do not match.");
-      return;
+      return alert("Passwords do not match.");
     }
 
     try {
@@ -43,7 +42,6 @@ function Register() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
 
-      toast.success("Registration successful.");
       navigate("/dashboard");
     } catch (error) {
       console.error(error);

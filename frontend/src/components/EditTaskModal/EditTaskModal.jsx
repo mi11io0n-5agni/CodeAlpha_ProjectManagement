@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import { updateTask } from "../../services/taskService";
+import { toast } from "react-toastify";
 
 import "./EditTaskModal.css";
 
@@ -53,6 +54,7 @@ function EditTaskModal({
       onUpdated();
 
       onClose();
+      toast.success("Task updated successfully.");
 
     } catch (error) {
 

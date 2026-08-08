@@ -31,16 +31,15 @@ function Login() {
 
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-
-      toast.success("Signed in successfully.");
+    toast.success("Login successful!");
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
 
-      toast.error(
-        error.response?.data?.message ||
-          "Login failed."
-      );
+   toast.error(
+    error.response?.data?.message ||
+        "Login failed."
+    );
     } finally {
       setLoading(false);
     }
