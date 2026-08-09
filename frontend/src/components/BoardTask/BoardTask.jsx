@@ -5,6 +5,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import EditTaskModal from "../EditTaskModal/EditTaskModal";
 
 import { deleteTask } from "../../services/taskService";
+import {toast} from "react-toastify";
 
 import "./BoardTask.css";
 
@@ -16,8 +17,16 @@ function BoardTask({
   const [openEdit, setOpenEdit] = useState(false);
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this task?"
+    const confirmDelete = toast.info(
+      "Are you sure you want to delete this task?",
+      {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
     );
 
     if (!confirmDelete) return;
@@ -26,12 +35,12 @@ function BoardTask({
       await deleteTask(task._id);
 
       onDeleted();
-
+      toast.success("Task deleted successfully.");
     } catch (error) {
 
       console.error(error);
 
-      alert("Failed to delete task.");
+      toast.error("Failed to delete task.");
 
     }
   };

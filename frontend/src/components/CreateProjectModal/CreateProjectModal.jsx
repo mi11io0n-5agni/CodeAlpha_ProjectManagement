@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createProject } from "../../services/projectService";
 import "./CreateProjectModal.css";
+import { toast } from "react-toastify";
 
 function CreateProjectModal({ open, onClose, onProjectCreated }) {
 const [form, setForm] = useState({
@@ -34,9 +35,10 @@ const [form, setForm] = useState({
 
       onProjectCreated();
       onClose();
+      toast.success("Project created successfully.");
     } catch (error) {
       console.error(error);
-      alert("Failed to create project.");
+      toast.error("Failed to create project.");
     } finally {
       setLoading(false);
     }

@@ -6,8 +6,9 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Projects from "./pages/Projects/Projects";
 import ProjectDetails from "./pages/ProjectDetails/ProjectDetails";
 import Profile from "./pages/Profile/Profile";
-
 import MainLayout from "./layouts/MainLayout/MainLayout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
@@ -49,6 +50,14 @@ function App() {
           }
         />
       </Routes>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
     </BrowserRouter>
   );
 }
