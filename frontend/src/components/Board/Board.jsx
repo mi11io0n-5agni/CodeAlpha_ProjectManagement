@@ -11,28 +11,31 @@ import {
 
 import "./Board.css";
 
-function Board({ projectId }) {
+function Board({ projectId, refresh }) {
   const [tasks, setTasks] = useState([]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [projectId]);
 
   const loadTasks = async () => {
     try {
       const data = await getProjectTasks(projectId);
 
-      setTasks(data.tasks);
-
+      setTasks(data.tasks || []);
     } catch (error) {
-
-      console.error(error);
-
+      console.error("Failed to load tasks:", error);
     }
   };
 
+  useEffect(() => {
+    if (projectId) {
+      loadTasks();
+    }
+  }, [projectId, refresh]);
+
   const handleDragEnd = async (result) => {
-    const { destination, source, draggableId } = result;
+    const {
+      destination,
+      source,
+      draggableId,
+    } = result;
 
     if (!destination) return;
 
@@ -46,18 +49,17 @@ function Board({ projectId }) {
     const newStatus = destination.droppableId;
 
     try {
-
       await updateTaskStatus(
         draggableId,
         newStatus
       );
 
-      loadTasks();
-
+      await loadTasks();
     } catch (error) {
-
-      console.error(error);
-
+      console.error(
+        "Failed to update task status:",
+        error
+      );
     }
   };
 
