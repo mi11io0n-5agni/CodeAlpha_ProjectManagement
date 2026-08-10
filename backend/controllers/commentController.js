@@ -13,6 +13,7 @@ export const addComment = async (req, res) => {
       });
     }
 
+    // Find the task
     const task = await Task.findById(taskId);
 
     if (!task) {
@@ -22,22 +23,31 @@ export const addComment = async (req, res) => {
       });
     }
 
+    // Create comment
     const comment = await Comment.create({
       task: taskId,
       user: req.user._id,
       text,
     });
 
-    const io = req.app.get("io");
-    io.emit("newComment", comment);
-
+    // Populate user before sending
     await comment.populate("user", "name email");
+
+    // Real-time notification
+    const io = req.app.get("io");
+
+    io.to(task.project.toString()).emit("newComment", {
+      ...comment.toObject(),
+      taskId: task._id,
+      projectId: task.project,
+    });
 
     res.status(201).json({
       success: true,
       message: "Comment added successfully",
       comment,
     });
+
   } catch (error) {
     console.error(error);
 
@@ -47,6 +57,7 @@ export const addComment = async (req, res) => {
     });
   }
 };
+
 
 // Get Comments
 export const getComments = async (req, res) => {
@@ -59,6 +70,7 @@ export const getComments = async (req, res) => {
       success: true,
       comments,
     });
+
   } catch (error) {
     console.error(error);
 
