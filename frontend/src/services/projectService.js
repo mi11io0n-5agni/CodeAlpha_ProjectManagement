@@ -29,3 +29,12 @@ export const deleteProject = async (projectId) => {
   const { data } = await API.delete(`/projects/${projectId}`);
   return data;
 };
+// Add member to project
+export const addProjectMember = async (projectId, email) => {
+  const { data } = await API.post(
+    `/projects/${projectId}/members`,
+    { email }
+  );
+
+  return data;
+};
