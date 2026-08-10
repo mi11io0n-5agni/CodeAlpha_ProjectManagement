@@ -6,6 +6,7 @@ import EditTaskModal from "../EditTaskModal/EditTaskModal";
 
 import { deleteTask } from "../../services/taskService";
 import {toast} from "react-toastify";
+import TaskComments from "../TaskComments/TaskComments";
 
 import "./BoardTask.css";
 
@@ -101,7 +102,7 @@ function BoardTask({
               </button>
 
             </div>
-
+          <TaskComments taskId={task._id} />
           </div>
         )}
       </Draggable>
