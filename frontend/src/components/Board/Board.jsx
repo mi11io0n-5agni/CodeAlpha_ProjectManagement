@@ -9,6 +9,8 @@ import {
   updateTaskStatus,
 } from "../../services/taskService";
 
+import socket from "../../services/socket";
+
 import "./Board.css";
 
 function Board({ projectId, refresh }) {
@@ -24,11 +26,103 @@ function Board({ projectId, refresh }) {
     }
   };
 
+  // Load tasks when project changes
+  // or when the parent asks for a refresh
   useEffect(() => {
     if (projectId) {
       loadTasks();
     }
   }, [projectId, refresh]);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    // Join this project's Socket.io room
+    socket.emit("joinProject", projectId);
+
+    console.log("Joined project room:", projectId);
+
+    // New task created
+    const handleTaskCreated = (task) => {
+      console.log("Real-time task created:", task);
+
+      if (task.project?.toString() === projectId) {
+        setTasks((prevTasks) => {
+          const exists = prevTasks.some(
+            (existingTask) => existingTask._id === task._id
+          );
+
+          if (exists) {
+            return prevTasks;
+          }
+
+          return [...prevTasks, task];
+        });
+      }
+    };
+
+    // Task updated
+    const handleTaskUpdated = (updatedTask) => {
+      console.log("Real-time task updated:", updatedTask);
+
+      if (updatedTask.project?.toString() === projectId) {
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === updatedTask._id
+              ? updatedTask
+              : task
+          )
+        );
+      }
+    };
+
+    // Task deleted
+    const handleTaskDeleted = (taskId) => {
+      console.log("Real-time task deleted:", taskId);
+
+      setTasks((prevTasks) =>
+        prevTasks.filter(
+          (task) => task._id !== taskId
+        )
+      );
+    };
+
+    socket.on(
+      "taskCreated",
+      handleTaskCreated
+    );
+
+    socket.on(
+      "taskUpdated",
+      handleTaskUpdated
+    );
+
+    socket.on(
+      "taskDeleted",
+      handleTaskDeleted
+    );
+
+    // Cleanup listeners when project changes
+    return () => {
+      socket.off(
+        "taskCreated",
+        handleTaskCreated
+      );
+
+      socket.off(
+        "taskUpdated",
+        handleTaskUpdated
+      );
+
+      socket.off(
+        "taskDeleted",
+        handleTaskDeleted
+      );
+    };
+  }, [projectId]);
 
   const handleDragEnd = async (result) => {
     const {
@@ -37,7 +131,9 @@ function Board({ projectId, refresh }) {
       draggableId,
     } = result;
 
-    if (!destination) return;
+    if (!destination) {
+      return;
+    }
 
     if (
       destination.droppableId === source.droppableId &&
