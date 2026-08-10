@@ -33,3 +33,304 @@
 .add-task-btn:hover {
   background: #1d4ed8;
 }
+
+
+/* =========================
+   Project Header Actions
+========================= */
+
+.project-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.invite-member-btn {
+  padding: 12px 20px;
+
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+
+  background: #eff6ff;
+  color: #2563eb;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.invite-member-btn:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   Project Members
+========================= */
+
+.project-members-section {
+  margin-bottom: 25px;
+
+  padding: 22px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 25px rgba(15, 23, 42, 0.05);
+}
+
+.members-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+.members-header h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 18px;
+}
+
+.members-header p {
+  margin: 5px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.members-invite-link {
+  border: none;
+
+  background: transparent;
+
+  color: #2563eb;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.members-invite-link:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================
+   Members List
+========================= */
+
+.members-list {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 12px;
+}
+
+.member-item {
+  min-width: 220px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 12px 14px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.member-item:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.07);
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.member-info {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  flex: 1;
+}
+
+.member-info strong {
+  color: #111827;
+
+  font-size: 14px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.member-info span {
+  color: #6b7280;
+
+  font-size: 12px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.owner-badge {
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  background: #dcfce7;
+
+  color: #15803d;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+
+/* =========================
+   Loading / Not Found
+========================= */
+
+.project-loading,
+.project-not-found {
+  min-height: 300px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  color: #6b7280;
+}
+
+.project-not-found h2 {
+  margin-bottom: 8px;
+
+  color: #111827;
+}
+
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 768px) {
+
+  .project-header {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 20px;
+  }
+
+  .project-header-actions {
+    width: 100%;
+  }
+
+  .invite-member-btn,
+  .add-task-btn {
+    flex: 1;
+
+    text-align: center;
+  }
+
+  .members-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .members-invite-link {
+    padding: 0;
+  }
+
+  .members-list {
+    flex-direction: column;
+  }
+
+  .member-item {
+    width: 100%;
+
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .project-header-actions {
+    flex-direction: column;
+  }
+
+  .invite-member-btn,
+  .add-task-btn {
+    width: 100%;
+  }
+
+  .project-members-section {
+    padding: 17px;
+  }
+}
