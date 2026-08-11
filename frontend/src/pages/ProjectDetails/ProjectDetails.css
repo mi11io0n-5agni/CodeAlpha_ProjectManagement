@@ -34,6 +34,50 @@
   background: #1d4ed8;
 }
 
+.edit-project-btn,
+.delete-project-btn {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.edit-project-btn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.edit-project-btn:hover {
+  background: #e5e7eb;
+}
+
+.delete-project-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-project-btn:hover {
+  background: #dc2626;
+}
+
+.remove-member-btn {
+  margin-left: auto;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.remove-member-btn:hover {
+  background: #dc2626;
+}
+
 
 /* =========================
    Project Header Actions

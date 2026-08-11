@@ -172,3 +172,147 @@ export const addProjectMember = async (req, res) => {
     });
   }
 };
+
+// Update Project
+export const updateProject = async (req, res) => {
+  try {
+    const { title, description, status } = req.body;
+    const { projectId } = req.params;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the project owner can update this project",
+      });
+    }
+
+    if (title) project.title = title;
+    if (description !== undefined) project.description = description;
+    if (status) project.status = status;
+
+    await project.save();
+
+    await project.populate("owner", "name email");
+    await project.populate("members", "name email");
+
+    res.status(200).json({
+      success: true,
+      message: "Project updated successfully",
+      project,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// Delete Project
+export const deleteProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the project owner can delete this project",
+      });
+    }
+
+    await project.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// Remove member from project
+export const removeProjectMember = async (req, res) => {
+  try {
+    const { projectId, memberId } = req.params;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the project owner can remove members",
+      });
+    }
+
+    if (memberId === project.owner.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "Project owner cannot be removed",
+      });
+    }
+
+    const memberIndex = project.members.findIndex(
+      (member) => member.toString() === memberId
+    );
+
+    if (memberIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Member not found in project",
+      });
+    }
+
+    project.members.splice(memberIndex, 1);
+
+    await project.save();
+
+    await project.populate("owner", "name email");
+    await project.populate("members", "name email");
+
+    res.status(200).json({
+      success: true,
+      message: "Member removed successfully",
+      project,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};

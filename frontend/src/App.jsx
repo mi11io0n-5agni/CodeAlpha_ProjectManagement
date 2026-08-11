@@ -5,6 +5,7 @@ import Register from "./pages/Register/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Projects from "./pages/Projects/Projects";
 import ProjectDetails from "./pages/ProjectDetails/ProjectDetails";
+import TaskDetails from "./pages/TaskDetails/TaskDetails";
 import Profile from "./pages/Profile/Profile";
 import MainLayout from "./layouts/MainLayout/MainLayout";
 import { ToastContainer } from "react-toastify";
@@ -34,6 +35,8 @@ function App() {
             path="/projects/:projectId"
             element={<ProjectDetails />}
           />
+
+          <Route path="/tasks/:taskId" element={<TaskDetails />} />
 
           <Route path="/profile" element={<Profile />} />
 

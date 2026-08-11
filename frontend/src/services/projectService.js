@@ -52,6 +52,17 @@ export const deleteProject = async (projectId) => {
   return data;
 };
 
+// Remove member from project
+export const removeProjectMember = async (
+  projectId,
+  memberId
+) => {
+  const { data } = await API.delete(
+    `/projects/${projectId}/members/${memberId}`
+  );
+
+  return data;
+};
 
 // Add member to project
 export const addProjectMember = async (

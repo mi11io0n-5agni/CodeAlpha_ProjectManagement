@@ -1,5 +1,6 @@
 import Comment from "../models/Comment.js";
 import Task from "../models/Task.js";
+import { createNotificationsForProject } from "./notificationController.js";
 
 // Add Comment
 export const addComment = async (req, res) => {
@@ -40,6 +41,16 @@ export const addComment = async (req, res) => {
       ...comment.toObject(),
       taskId: task._id,
       projectId: task.project,
+    });
+
+    // Persist notifications for project members
+    await createNotificationsForProject({
+      actorId: req.user._id,
+      projectId: task.project,
+      taskId: task._id,
+      type: "comment",
+      message: `${req.user.name || "Someone"} commented on a task`,
+      app: req.app,
     });
 
     res.status(201).json({

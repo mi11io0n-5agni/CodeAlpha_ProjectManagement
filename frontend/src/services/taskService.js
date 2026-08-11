@@ -37,3 +37,9 @@ export const deleteTask = async (taskId) => {
 
   return data;
 };
+
+// Get single task
+export const getTask = async (taskId) => {
+  const { data } = await API.get(`/tasks/${taskId}`);
+  return data;
+};

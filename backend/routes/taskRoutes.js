@@ -3,6 +3,7 @@ import express from "express";
 import {
   createTask,
   getProjectTasks,
+  getTask,
   updateTaskStatus,
   updateTask,
   deleteTask,
@@ -18,6 +19,8 @@ router.get(
  protect,
  getProjectTasks
 );
+
+router.get("/:id", protect, getTask);
 
 router.put(
  "/:id",

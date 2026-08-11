@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../../services/socket";
+import {
+  getNotifications as fetchNotifications,
+  markNotificationAsRead,
+  clearNotifications as clearNotificationsApi,
+} from "../../services/notificationService";
 
 import "./Navbar.css";
 
@@ -15,29 +20,35 @@ function Navbar() {
   const [showNotifications, setShowNotifications] =
     useState(false);
 
-  const unreadCount = notifications.length;
+  const unreadCount = notifications.filter((n) => !n.read).length || notifications.length;
 
   useEffect(() => {
+    // load persisted notifications
+    (async () => {
+      try {
+        const data = await fetchNotifications();
+        setNotifications(data.notifications || []);
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
+    })();
+
     // ============================
     // New Comment
     // ============================
 
     const handleNewComment = (comment) => {
       const notification = {
-        id: `comment-${Date.now()}`,
+        id: comment.id || `comment-${Date.now()}`,
+        _id: comment.id,
         type: "comment",
-        message: `${
-          comment.user?.name || "Someone"
-        } commented on a task`,
+        message: `${comment.user?.name || "Someone"} commented on a task`,
         time: new Date(),
         taskId: comment.taskId,
         projectId: comment.projectId,
       };
 
-      setNotifications((prev) => [
-        notification,
-        ...prev,
-      ]);
+      setNotifications((prev) => [notification, ...prev]);
     };
 
     // ============================
@@ -46,7 +57,8 @@ function Navbar() {
 
     const handleTaskCreated = (task) => {
       const notification = {
-        id: `created-${Date.now()}`,
+        id: task._id ? `task-${task._id}` : `created-${Date.now()}`,
+        _id: task._id,
         type: "task",
         message: `New task created: ${task.title}`,
         time: new Date(),
@@ -54,10 +66,7 @@ function Navbar() {
         projectId: task.project,
       };
 
-      setNotifications((prev) => [
-        notification,
-        ...prev,
-      ]);
+      setNotifications((prev) => [notification, ...prev]);
     };
 
     // ============================
@@ -66,7 +75,8 @@ function Navbar() {
 
     const handleTaskUpdated = (task) => {
       const notification = {
-        id: `updated-${Date.now()}`,
+        id: task._id ? `update-${task._id}` : `updated-${Date.now()}`,
+        _id: task._id,
         type: "update",
         message: `Task updated: ${task.title}`,
         time: new Date(),
@@ -74,10 +84,22 @@ function Navbar() {
         projectId: task.project,
       };
 
-      setNotifications((prev) => [
-        notification,
-        ...prev,
-      ]);
+      setNotifications((prev) => [notification, ...prev]);
+    };
+
+    // listen for persisted notification events (sent when server creates them)
+    const handleNewPersisted = (n) => {
+      const notification = {
+        id: n.id || n._id,
+        _id: n.id || n._id,
+        type: n.type,
+        message: n.message,
+        time: n.createdAt ? new Date(n.createdAt) : new Date(),
+        taskId: n.task,
+        projectId: n.project,
+      };
+
+      setNotifications((prev) => [notification, ...prev]);
     };
 
     // ============================
@@ -99,6 +121,8 @@ function Navbar() {
       handleTaskUpdated
     );
 
+    socket.on("newNotification", handleNewPersisted);
+
     // ============================
     // Cleanup
     // ============================
@@ -118,6 +142,8 @@ function Navbar() {
         "taskUpdated",
         handleTaskUpdated
       );
+
+      socket.off("newNotification", handleNewPersisted);
     };
   }, []);
 
@@ -132,11 +158,21 @@ function Navbar() {
       notification.projectId &&
       notification.taskId
     ) {
-      setShowNotifications(false);
+      (async () => {
+        try {
+          if (notification._id) {
+            await markNotificationAsRead(notification._id);
+          }
+        } catch (err) {
+          console.error("Failed to mark notification read", err);
+        }
 
-      navigate(
-        `/projects/${notification.projectId}?task=${notification.taskId}`
-      );
+        setShowNotifications(false);
+
+        navigate(
+          `/projects/${notification.projectId}?task=${notification.taskId}`
+        );
+      })();
     }
   };
 
@@ -145,8 +181,16 @@ function Navbar() {
   // ============================
 
   const clearNotifications = () => {
-    setNotifications([]);
-    setShowNotifications(false);
+    (async () => {
+      try {
+        await clearNotificationsApi();
+        setNotifications([]);
+      } catch (err) {
+        console.error("Failed to clear notifications", err);
+      } finally {
+        setShowNotifications(false);
+      }
+    })();
   };
 
   return (
@@ -249,7 +293,11 @@ function Navbar() {
                           </p>
 
                           <span>
-                            Just now
+                            {notification.time
+                              ? new Date(notification.time).toLocaleString()
+                              : notification.createdAt
+                              ? new Date(notification.createdAt).toLocaleString()
+                              : "Just now"}
                           </span>
 
                         </div>
