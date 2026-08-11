@@ -23,35 +23,45 @@ function BoardTask({
   // when opened from notification
   // ============================
 
+  const isSelectedTask =
+    selectedTaskId &&
+    task._id &&
+    selectedTaskId.toString() ===
+      task._id.toString();
+
   useEffect(() => {
-    if (
-      selectedTaskId &&
-      task._id === selectedTaskId
-    ) {
-      const timer = setTimeout(() => {
-        const taskElement =
-          document.getElementById(
-            `task-${task._id}`
-          );
-
-        if (taskElement) {
-          taskElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
-      }, 300);
-
-      return () => clearTimeout(timer);
+    if (!isSelectedTask) {
+      return;
     }
-  }, [selectedTaskId, task._id]);
+
+    const scrollToTask = () => {
+      const taskElement =
+        document.getElementById(
+          `task-${task._id}`
+        );
+
+      if (taskElement) {
+        taskElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    };
+
+    const timer = setTimeout(
+      scrollToTask,
+      300
+    );
+
+    return () => clearTimeout(timer);
+  }, [isSelectedTask, task._id]);
 
   // ============================
   // Delete Task
   // ============================
 
   const handleDelete = async () => {
-    const confirmDelete = toast.info(
+    const confirmDelete = window.confirm(
       "Are you sure you want to delete this task?",
       {
         position: "top-right",
@@ -100,8 +110,7 @@ function BoardTask({
   // Selected Task
   // ============================
 
-  const isSelected =
-    selectedTaskId === task._id;
+  const isSelected = isSelectedTask;
 
   // ============================
   // Render

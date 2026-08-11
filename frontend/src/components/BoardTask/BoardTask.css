@@ -92,3 +92,19 @@
 .delete-btn:hover {
   background: #b91c1c;
 }
+
+@media (max-width: 520px) {
+  .board-task {
+    padding: 14px;
+  }
+
+  .task-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 100%;
+  }
+}

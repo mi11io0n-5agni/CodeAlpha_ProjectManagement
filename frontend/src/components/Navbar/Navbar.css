@@ -259,6 +259,46 @@
   gap: 12px;
 }
 
+@media (max-width: 900px) {
+  .navbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+    padding: 16px 20px;
+    height: auto;
+  }
+
+  .navbar-left,
+  .navbar-right {
+    width: 100%;
+  }
+
+  .navbar-right {
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  .navbar-left h2 {
+    font-size: 18px;
+  }
+
+  .notification-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 560px) {
+  .notification-panel {
+    width: calc(100vw - 32px);
+    right: 16px;
+    left: auto;
+  }
+
+  .notification-item {
+    padding: 12px 14px;
+  }
+}
+
 .avatar {
   width: 45px;
   height: 45px;
