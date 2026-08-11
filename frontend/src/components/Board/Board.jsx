@@ -13,82 +13,149 @@ import socket from "../../services/socket";
 
 import "./Board.css";
 
-function Board({ projectId, refresh }) {
+function Board({
+  projectId,
+  refresh,
+  selectedTaskId,
+}) {
   const [tasks, setTasks] = useState([]);
+
+  // ============================
+  // Load Tasks
+  // ============================
 
   const loadTasks = async () => {
     try {
-      const data = await getProjectTasks(projectId);
+      const data =
+        await getProjectTasks(projectId);
 
       setTasks(data.tasks || []);
     } catch (error) {
-      console.error("Failed to load tasks:", error);
+      console.error(
+        "Failed to load tasks:",
+        error
+      );
     }
   };
 
-  // Load tasks when project changes
-  // or when the parent asks for a refresh
+  // ============================
+  // Load when project / refresh changes
+  // ============================
+
   useEffect(() => {
     if (projectId) {
       loadTasks();
     }
   }, [projectId, refresh]);
 
-  // Socket.io real-time updates
+  // ============================
+  // Socket.io
+  // ============================
+
   useEffect(() => {
     if (!projectId) {
       return;
     }
 
-    // Join this project's Socket.io room
-    socket.emit("joinProject", projectId);
+    // Join project room
+    socket.emit(
+      "joinProject",
+      projectId
+    );
 
-    console.log("Joined project room:", projectId);
+    console.log(
+      "Joined project room:",
+      projectId
+    );
 
-    // New task created
-    const handleTaskCreated = (task) => {
-      console.log("Real-time task created:", task);
+    // ============================
+    // Task Created
+    // ============================
 
-      if (task.project?.toString() === projectId) {
+    const handleTaskCreated = (
+      task
+    ) => {
+      console.log(
+        "Real-time task created:",
+        task
+      );
+
+      if (
+        task.project?.toString() ===
+        projectId
+      ) {
         setTasks((prevTasks) => {
-          const exists = prevTasks.some(
-            (existingTask) => existingTask._id === task._id
-          );
+
+          const exists =
+            prevTasks.some(
+              (existingTask) =>
+                existingTask._id ===
+                task._id
+            );
 
           if (exists) {
             return prevTasks;
           }
 
-          return [...prevTasks, task];
+          return [
+            ...prevTasks,
+            task,
+          ];
         });
       }
     };
 
-    // Task updated
-    const handleTaskUpdated = (updatedTask) => {
-      console.log("Real-time task updated:", updatedTask);
+    // ============================
+    // Task Updated
+    // ============================
 
-      if (updatedTask.project?.toString() === projectId) {
+    const handleTaskUpdated = (
+      updatedTask
+    ) => {
+      console.log(
+        "Real-time task updated:",
+        updatedTask
+      );
+
+      if (
+        updatedTask.project?.toString() ===
+        projectId
+      ) {
         setTasks((prevTasks) =>
-          prevTasks.map((task) =>
-            task._id === updatedTask._id
-              ? updatedTask
-              : task
+          prevTasks.map(
+            (task) =>
+              task._id ===
+              updatedTask._id
+                ? updatedTask
+                : task
           )
         );
       }
     };
 
-    // Task deleted
-    const handleTaskDeleted = (taskId) => {
-      console.log("Real-time task deleted:", taskId);
+    // ============================
+    // Task Deleted
+    // ============================
+
+    const handleTaskDeleted = (
+      taskId
+    ) => {
+      console.log(
+        "Real-time task deleted:",
+        taskId
+      );
 
       setTasks((prevTasks) =>
         prevTasks.filter(
-          (task) => task._id !== taskId
+          (task) =>
+            task._id !== taskId
         )
       );
     };
+
+    // ============================
+    // Socket listeners
+    // ============================
 
     socket.on(
       "taskCreated",
@@ -105,7 +172,10 @@ function Board({ projectId, refresh }) {
       handleTaskDeleted
     );
 
-    // Cleanup listeners when project changes
+    // ============================
+    // Cleanup
+    // ============================
+
     return () => {
       socket.off(
         "taskCreated",
@@ -124,7 +194,13 @@ function Board({ projectId, refresh }) {
     };
   }, [projectId]);
 
-  const handleDragEnd = async (result) => {
+  // ============================
+  // Drag & Drop
+  // ============================
+
+  const handleDragEnd = async (
+    result
+  ) => {
     const {
       destination,
       source,
@@ -136,13 +212,16 @@ function Board({ projectId, refresh }) {
     }
 
     if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
+      destination.droppableId ===
+        source.droppableId &&
+      destination.index ===
+        source.index
     ) {
       return;
     }
 
-    const newStatus = destination.droppableId;
+    const newStatus =
+      destination.droppableId;
 
     try {
       await updateTaskStatus(
@@ -151,6 +230,7 @@ function Board({ projectId, refresh }) {
       );
 
       await loadTasks();
+
     } catch (error) {
       console.error(
         "Failed to update task status:",
@@ -159,26 +239,39 @@ function Board({ projectId, refresh }) {
     }
   };
 
+  // ============================
+  // Filter Tasks
+  // ============================
+
   const todo = tasks.filter(
-    (task) => task.status === "todo"
+    (task) =>
+      task.status === "todo"
   );
 
   const progress = tasks.filter(
-    (task) => task.status === "in-progress"
+    (task) =>
+      task.status === "in-progress"
   );
 
   const review = tasks.filter(
-    (task) => task.status === "review"
+    (task) =>
+      task.status === "review"
   );
 
   const done = tasks.filter(
-    (task) => task.status === "done"
+    (task) =>
+      task.status === "done"
   );
+
+  // ============================
+  // Render
+  // ============================
 
   return (
     <DragDropContext
       onDragEnd={handleDragEnd}
     >
+
       <div className="board">
 
         <BoardColumn
@@ -186,6 +279,9 @@ function Board({ projectId, refresh }) {
           status="todo"
           tasks={todo}
           reloadTasks={loadTasks}
+          selectedTaskId={
+            selectedTaskId
+          }
         />
 
         <BoardColumn
@@ -193,6 +289,9 @@ function Board({ projectId, refresh }) {
           status="in-progress"
           tasks={progress}
           reloadTasks={loadTasks}
+          selectedTaskId={
+            selectedTaskId
+          }
         />
 
         <BoardColumn
@@ -200,6 +299,9 @@ function Board({ projectId, refresh }) {
           status="review"
           tasks={review}
           reloadTasks={loadTasks}
+          selectedTaskId={
+            selectedTaskId
+          }
         />
 
         <BoardColumn
@@ -207,9 +309,13 @@ function Board({ projectId, refresh }) {
           status="done"
           tasks={done}
           reloadTasks={loadTasks}
+          selectedTaskId={
+            selectedTaskId
+          }
         />
 
       </div>
+
     </DragDropContext>
   );
 }

@@ -306,6 +306,27 @@
   font-size: 20px;
 }
 
+.notification-item {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notification-item:hover {
+  background: #eff6ff;
+}
+
+.notification-arrow {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.notification-item:hover .notification-arrow {
+  transform: translateX(3px);
+  color: #2563eb;
+}
+
 /* =========================
    Responsive
 ========================= */

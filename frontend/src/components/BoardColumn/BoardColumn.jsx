@@ -9,6 +9,7 @@ function BoardColumn({
   status,
   tasks,
   reloadTasks,
+  selectedTaskId,
 }) {
   return (
     <Droppable droppableId={status}>
@@ -30,6 +31,7 @@ function BoardColumn({
               task={task}
               index={index}
               onDeleted={reloadTasks}
+              selectedTaskId={selectedTaskId}
             />
           ))}
 

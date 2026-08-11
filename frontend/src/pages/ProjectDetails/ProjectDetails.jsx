@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { toast } from "react-toastify";
 
 import Board from "../../components/Board/Board";
@@ -13,14 +16,24 @@ import "./ProjectDetails.css";
 function ProjectDetails() {
   const { projectId } = useParams();
 
+  const [searchParams] = useSearchParams();
+
+  const selectedTaskId = searchParams.get("task");
+
   const [openModal, setOpenModal] = useState(false);
+
   const [openInviteModal, setOpenInviteModal] =
     useState(false);
 
   const [refresh, setRefresh] = useState(false);
 
   const [project, setProject] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
+  // ============================
+  // Load Project
+  // ============================
 
   const loadProject = async () => {
     try {
@@ -41,17 +54,37 @@ function ProjectDetails() {
     }
   };
 
+  // ============================
+  // Load project when ID changes
+  // ============================
+
   useEffect(() => {
-    loadProject();
+    if (projectId) {
+      loadProject();
+    }
   }, [projectId]);
+
+  // ============================
+  // Task Created
+  // ============================
 
   const handleTaskCreated = () => {
     setRefresh((prev) => !prev);
   };
 
-  const handleMemberAdded = (updatedProject) => {
+  // ============================
+  // Member Added
+  // ============================
+
+  const handleMemberAdded = (
+    updatedProject
+  ) => {
     setProject(updatedProject);
   };
+
+  // ============================
+  // Loading
+  // ============================
 
   if (loading) {
     return (
@@ -61,13 +94,18 @@ function ProjectDetails() {
     );
   }
 
+  // ============================
+  // Project Not Found
+  // ============================
+
   if (!project) {
     return (
       <div className="project-not-found">
         <h2>Project not found</h2>
+
         <p>
-          This project may have been deleted or you
-          don't have access to it.
+          This project may have been deleted or
+          you don't have access to it.
         </p>
       </div>
     );
@@ -75,6 +113,10 @@ function ProjectDetails() {
 
   return (
     <div className="project-details">
+
+      {/* ============================
+          Project Header
+      ============================ */}
 
       <div className="project-header">
 
@@ -113,13 +155,19 @@ function ProjectDetails() {
 
       </div>
 
+      {/* ============================
+          Project Members
+      ============================ */}
 
       <div className="project-members-section">
 
         <div className="members-header">
 
           <div>
-            <h2>Project Members</h2>
+
+            <h2>
+              Project Members
+            </h2>
 
             <p>
               {project.members?.length || 0}{" "}
@@ -128,6 +176,7 @@ function ProjectDetails() {
                 ? ""
                 : "s"}
             </p>
+
           </div>
 
           <button
@@ -141,64 +190,81 @@ function ProjectDetails() {
 
         </div>
 
-
         <div className="members-list">
 
-          {project.members?.map((member) => (
+          {project.members?.map(
+            (member) => (
 
-            <div
-              className="member-item"
-              key={member._id}
-            >
+              <div
+                className="member-item"
+                key={member._id}
+              >
 
-              <div className="member-avatar">
-                {member.name
-                  ?.charAt(0)
-                  .toUpperCase() || "U"}
+                <div className="member-avatar">
+
+                  {member.name
+                    ?.charAt(0)
+                    .toUpperCase() || "U"}
+
+                </div>
+
+                <div className="member-info">
+
+                  <strong>
+                    {member.name}
+                  </strong>
+
+                  <span>
+                    {member.email}
+                  </span>
+
+                </div>
+
+                {project.owner?._id ===
+                  member._id && (
+                  <span className="owner-badge">
+                    Owner
+                  </span>
+                )}
+
               </div>
 
-              <div className="member-info">
-
-                <strong>
-                  {member.name}
-                </strong>
-
-                <span>
-                  {member.email}
-                </span>
-
-              </div>
-
-              {project.owner?._id ===
-                member._id && (
-                <span className="owner-badge">
-                  Owner
-                </span>
-              )}
-
-            </div>
-
-          ))}
+            )
+          )}
 
         </div>
 
       </div>
 
+      {/* ============================
+          Project Board
+      ============================ */}
 
       <Board
         projectId={projectId}
         refresh={refresh}
+        selectedTaskId={selectedTaskId}
       />
 
+      {/* ============================
+          Create Task Modal
+      ============================ */}
 
       <CreateTaskModal
-      open={openModal}
-      onClose={() => setOpenModal(false)}
-      projectId={projectId}
-      members={project.members || []}
-      onTaskCreated={handleTaskCreated}
-    />
+        open={openModal}
+        onClose={() =>
+          setOpenModal(false)
+        }
+        projectId={projectId}
+        members={project.members || []}
+        onTaskCreated={
+          handleTaskCreated
+        }
+      />
 
+      {/* ============================
+          Invite Member Modal
+      ============================ */}
 
       <InviteMemberModal
         open={openInviteModal}
@@ -206,7 +272,9 @@ function ProjectDetails() {
           setOpenInviteModal(false)
         }
         projectId={projectId}
-        onMemberAdded={handleMemberAdded}
+        onMemberAdded={
+          handleMemberAdded
+        }
       />
 
     </div>

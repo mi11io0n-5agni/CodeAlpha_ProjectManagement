@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Draggable } from "@hello-pangea/dnd";
 
 import EditTaskModal from "../EditTaskModal/EditTaskModal";
 
 import { deleteTask } from "../../services/taskService";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import TaskComments from "../TaskComments/TaskComments";
 
 import "./BoardTask.css";
@@ -14,8 +14,41 @@ function BoardTask({
   task,
   index,
   onDeleted,
+  selectedTaskId,
 }) {
   const [openEdit, setOpenEdit] = useState(false);
+
+  // ============================
+  // Automatically focus task
+  // when opened from notification
+  // ============================
+
+  useEffect(() => {
+    if (
+      selectedTaskId &&
+      task._id === selectedTaskId
+    ) {
+      const timer = setTimeout(() => {
+        const taskElement =
+          document.getElementById(
+            `task-${task._id}`
+          );
+
+        if (taskElement) {
+          taskElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTaskId, task._id]);
+
+  // ============================
+  // Delete Task
+  // ============================
 
   const handleDelete = async () => {
     const confirmDelete = toast.info(
@@ -36,21 +69,43 @@ function BoardTask({
       await deleteTask(task._id);
 
       onDeleted();
-      toast.success("Task deleted successfully.");
-    } catch (error) {
 
+      toast.success(
+        "Task deleted successfully."
+      );
+    } catch (error) {
       console.error(error);
 
-      toast.error("Failed to delete task.");
-
+      toast.error(
+        "Failed to delete task."
+      );
     }
   };
 
-  const formatDate = (date) => {
-    if (!date) return "No deadline";
+  // ============================
+  // Format Date
+  // ============================
 
-    return new Date(date).toLocaleDateString();
+  const formatDate = (date) => {
+    if (!date) {
+      return "No deadline";
+    }
+
+    return new Date(
+      date
+    ).toLocaleDateString();
   };
+
+  // ============================
+  // Selected Task
+  // ============================
+
+  const isSelected =
+    selectedTaskId === task._id;
+
+  // ============================
+  // Render
+  // ============================
 
   return (
     <>
@@ -60,36 +115,50 @@ function BoardTask({
       >
         {(provided) => (
           <div
-            className="board-task"
+            id={`task-${task._id}`}
+            className={`board-task ${
+              isSelected
+                ? "selected-task"
+                : ""
+            }`}
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
           >
-            <div className={`priority-badge ${task.priority}`}>
+            <div
+              className={`priority-badge ${task.priority}`}
+            >
               {task.priority?.toUpperCase()}
             </div>
 
             <h4>{task.title}</h4>
 
-            <p>{task.description || "No description"}</p>
+            <p>
+              {task.description ||
+                "No description"}
+            </p>
 
             <div className="task-info">
-
               <div>
-                👤 {task.assignedTo?.name || "Unassigned"}
+                👤{" "}
+                {task.assignedTo?.name ||
+                  "Unassigned"}
               </div>
 
               <div>
-                📅 {formatDate(task.dueDate)}
+                📅{" "}
+                {formatDate(
+                  task.dueDate
+                )}
               </div>
-
             </div>
 
             <div className="task-actions">
-
               <button
                 className="edit-btn"
-                onClick={() => setOpenEdit(true)}
+                onClick={() =>
+                  setOpenEdit(true)
+                }
               >
                 Edit
               </button>
@@ -100,16 +169,20 @@ function BoardTask({
               >
                 Delete
               </button>
-
             </div>
-          <TaskComments taskId={task._id} />
+
+            <TaskComments
+              taskId={task._id}
+            />
           </div>
         )}
       </Draggable>
 
       <EditTaskModal
         open={openEdit}
-        onClose={() => setOpenEdit(false)}
+        onClose={() =>
+          setOpenEdit(false)
+        }
         task={task}
         onUpdated={onDeleted}
       />
