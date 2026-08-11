@@ -1,37 +1,33 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:5000/api/auth",
-});
+import api from "./api";
 
 // Register User
 export const register = async (userData) => {
-  const { data } = await API.post("/register", userData);
+  const { data } = await api.post("/auth/register", userData);
   return data;
 };
 
 // Login User
 export const login = async (userData) => {
-  const { data } = await API.post("/login", userData);
+  const { data } = await api.post("/auth/login", userData);
   return data;
 };
 
 // Get current profile
 export const getProfile = async () => {
-  const { data } = await API.get("/profile");
+  const { data } = await api.get("/auth/profile");
   return data;
 };
 
 // Update profile
 export const updateProfile = async (profileData) => {
-  const { data } = await API.put("/profile", profileData);
+  const { data } = await api.put("/auth/profile", profileData);
   return data;
 };
 
 // Change password
 export const changePassword = async (passwordData) => {
-  const { data } = await API.put(
-    "/profile/password",
+  const { data } = await api.put(
+    "/auth/profile/password",
     passwordData
   );
   return data;
