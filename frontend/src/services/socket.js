@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 let socket = null;
 
@@ -26,11 +27,17 @@ export const connectSocket = () => {
     });
 
     socket.on("connect_error", (error) => {
-      console.error("🔴 Socket connection error:", error.message);
+      console.error(
+        "🔴 Socket connection error:",
+        error.message
+      );
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("🔌 Socket disconnected:", reason);
+      console.log(
+        "🔌 Socket disconnected:",
+        reason
+      );
     });
   }
 
@@ -51,9 +58,11 @@ export default {
   on: (...args) => socket?.on(...args),
   off: (...args) => socket?.off(...args),
   emit: (...args) => socket?.emit(...args),
+
   get connected() {
     return socket?.connected || false;
   },
+
   get id() {
     return socket?.id;
   },
