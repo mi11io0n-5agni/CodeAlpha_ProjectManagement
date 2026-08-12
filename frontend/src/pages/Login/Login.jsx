@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { login } from "../../services/authService";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
 import { toast } from "react-toastify";
+
+import { login } from "../../services/authService";
+import { connectSocket } from "../../services/socket";
+
 import "./Login.css";
 
 function Login() {
@@ -14,32 +21,77 @@ function Login() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  // ------------------------------------------
+  // Handle input changes
+  // ------------------------------------------
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ------------------------------------------
+  // Handle login
+  // ------------------------------------------
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (loading) {
+      return;
+    }
 
     try {
       setLoading(true);
 
-      const res = await login(form);
+      // --------------------------------------
+      // Login request
+      // --------------------------------------
 
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      const response = await login(form);
+
+      // --------------------------------------
+      // Save authentication data
+      // --------------------------------------
+
+      localStorage.setItem(
+        "token",
+        response.token
+      );
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.user)
+      );
+
+      // --------------------------------------
+      // Connect authenticated socket
+      // --------------------------------------
+
+      connectSocket();
+
+      // --------------------------------------
+      // Redirect
+      // --------------------------------------
+
+      toast.success(
+        "Logged in successfully."
+      );
 
       navigate("/dashboard");
-      toast.success("Logged in successfully.");
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Login error:",
+        error
+      );
 
       toast.error(
         error.response?.data?.message ||
-          "Login failed."
+          "Login failed. Please check your email and password."
       );
     } finally {
       setLoading(false);
@@ -49,19 +101,32 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-container">
+        {/* ---------------------------------- */}
+        {/* Header */}
+        {/* ---------------------------------- */}
+
         <h1>TaskFlow</h1>
 
         <p>Sign in to continue.</p>
 
+        {/* ---------------------------------- */}
+        {/* Login form */}
+        {/* ---------------------------------- */}
+
         <form onSubmit={handleSubmit}>
+          {/* Email */}
+
           <input
             type="email"
             name="email"
             placeholder="Email Address"
             value={form.email}
             onChange={handleChange}
+            autoComplete="email"
             required
           />
+
+          {/* Password */}
 
           <input
             type="password"
@@ -69,20 +134,32 @@ function Login() {
             placeholder="Password"
             value={form.password}
             onChange={handleChange}
+            autoComplete="current-password"
             required
           />
+
+          {/* Submit */}
 
           <button
             type="submit"
             disabled={loading}
           >
-            {loading ? "Signing In..." : "Sign In"}
+            {loading
+              ? "Signing In..."
+              : "Sign In"}
           </button>
         </form>
 
+        {/* ---------------------------------- */}
+        {/* Register link */}
+        {/* ---------------------------------- */}
+
         <p className="bottom-text">
           Don't have an account?
-          <Link to="/register"> Register</Link>
+          <Link to="/register">
+            {" "}
+            Register
+          </Link>
         </p>
       </div>
     </div>

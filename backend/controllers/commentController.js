@@ -1,20 +1,25 @@
 import Comment from "../models/Comment.js";
 import Task from "../models/Task.js";
-import { createNotificationsForProject } from "./notificationController.js";
+import { createNotification } from "./notificationController.js";
 
 // Add Comment
 export const addComment = async (req, res) => {
   try {
     const { taskId, text } = req.body;
 
-    if (!text) {
+    // ----------------------------------------------
+    // Validate comment
+    // ----------------------------------------------
+    if (!text || !text.trim()) {
       return res.status(400).json({
         success: false,
         message: "Comment cannot be empty",
       });
     }
 
-    // Find the task
+    // ----------------------------------------------
+    // Find task
+    // ----------------------------------------------
     const task = await Task.findById(taskId);
 
     if (!task) {
@@ -24,43 +29,75 @@ export const addComment = async (req, res) => {
       });
     }
 
+    // ----------------------------------------------
     // Create comment
+    // ----------------------------------------------
     const comment = await Comment.create({
       task: taskId,
       user: req.user._id,
-      text,
+      text: text.trim(),
     });
 
-    // Populate user before sending
-    await comment.populate("user", "name email");
+    // Populate comment author
+    await comment.populate(
+      "user",
+      "name email"
+    );
 
-    // Real-time notification
+    // ----------------------------------------------
+    // Real-time comment
+    //
+    // Everyone currently viewing the project can
+    // receive this board/task update.
+    // ----------------------------------------------
     const io = req.app.get("io");
 
-    io.to(task.project.toString()).emit("newComment", {
-      ...comment.toObject(),
-      taskId: task._id,
-      projectId: task.project,
-    });
+    if (io) {
+      io.to(task.project.toString()).emit(
+        "newComment",
+        {
+          ...comment.toObject(),
+          taskId: task._id,
+          projectId: task.project,
+        }
+      );
+    }
 
-    // Persist notifications for project members
-    await createNotificationsForProject({
-      actorId: req.user._id,
-      projectId: task.project,
-      taskId: task._id,
-      type: "comment",
-      message: `${req.user.name || "Someone"} commented on a task`,
-      app: req.app,
-    });
+    // ----------------------------------------------
+    // Personal notification
+    //
+    // Notify the task assignee only.
+    // The person who wrote the comment is excluded.
+    // ----------------------------------------------
+    if (
+      task.assignedTo &&
+      task.assignedTo.toString() !==
+        req.user._id.toString()
+    ) {
+      await createNotification({
+        recipientId: task.assignedTo,
+        actorId: req.user._id,
+        projectId: task.project,
+        taskId: task._id,
+        type: "comment",
+        message: `${req.user.name || "Someone"} commented on your task: ${task.title}`,
+        app: req.app,
+      });
+    }
 
+    // ----------------------------------------------
+    // Response
+    // ----------------------------------------------
     res.status(201).json({
       success: true,
       message: "Comment added successfully",
       comment,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Add comment error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -68,7 +105,6 @@ export const addComment = async (req, res) => {
     });
   }
 };
-
 
 // Get Comments
 export const getComments = async (req, res) => {

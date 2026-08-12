@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../../services/socket";
+
+import { connectSocket } from "../../services/socket";
+
 import {
   getNotifications as fetchNotifications,
   markNotificationAsRead,
@@ -12,204 +14,271 @@ import "./Navbar.css";
 function Navbar() {
   const navigate = useNavigate();
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user")) || {
     name: "User",
   };
 
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] =
-    useState(false);
-
-  const unreadCount = notifications.filter((n) => !n.read).length || notifications.length;
+  const unreadCount = notifications.filter(
+    (notification) => !notification.read
+  ).length;
 
   useEffect(() => {
-    // load persisted notifications
-    (async () => {
+    let socket;
+
+    // ------------------------------------------
+    // Load saved notifications from database
+    // ------------------------------------------
+
+    const loadNotifications = async () => {
       try {
         const data = await fetchNotifications();
+
         setNotifications(data.notifications || []);
-      } catch (err) {
-        console.error("Failed to load notifications", err);
+      } catch (error) {
+        console.error(
+          "Failed to load notifications:",
+          error
+        );
       }
-    })();
-
-    // ============================
-    // New Comment
-    // ============================
-
-    const handleNewComment = (comment) => {
-      const notification = {
-        id: comment.id || `comment-${Date.now()}`,
-        _id: comment.id,
-        type: "comment",
-        message: `${comment.user?.name || "Someone"} commented on a task`,
-        time: new Date(),
-        taskId: comment.taskId,
-        projectId: comment.projectId,
-      };
-
-      setNotifications((prev) => [notification, ...prev]);
     };
 
-    // ============================
-    // New Task
-    // ============================
+    loadNotifications();
 
-    const handleTaskCreated = (task) => {
-      const notification = {
-        id: task._id ? `task-${task._id}` : `created-${Date.now()}`,
-        _id: task._id,
-        type: "task",
-        message: `New task created: ${task.title}`,
-        time: new Date(),
-        taskId: task._id,
-        projectId: task.project,
+    // ------------------------------------------
+    // Connect to Socket.io
+    // ------------------------------------------
+
+    socket = connectSocket();
+
+    if (!socket) {
+      console.warn(
+        "Notification socket was not connected."
+      );
+
+      return;
+    }
+
+    // ------------------------------------------
+    // New persistent notification
+    // ------------------------------------------
+
+    const handleNewNotification = (notification) => {
+      console.log(
+        "🔔 New notification received:",
+        notification
+      );
+
+      const newNotification = {
+        id:
+          notification.id ||
+          notification._id,
+
+        _id:
+          notification.id ||
+          notification._id,
+
+        type: notification.type,
+
+        message: notification.message,
+
+        time: notification.createdAt
+          ? new Date(notification.createdAt)
+          : new Date(),
+
+        taskId: notification.task,
+
+        projectId: notification.project,
+
+        read: notification.read || false,
+
+        actor: notification.actor,
       };
 
-      setNotifications((prev) => [notification, ...prev]);
+      setNotifications((previous) => [
+        newNotification,
+        ...previous,
+      ]);
     };
 
-    // ============================
-    // Task Updated
-    // ============================
+    // ------------------------------------------
+    // Socket connection
+    // ------------------------------------------
 
-    const handleTaskUpdated = (task) => {
-      const notification = {
-        id: task._id ? `update-${task._id}` : `updated-${Date.now()}`,
-        _id: task._id,
-        type: "update",
-        message: `Task updated: ${task.title}`,
-        time: new Date(),
-        taskId: task._id,
-        projectId: task.project,
-      };
-
-      setNotifications((prev) => [notification, ...prev]);
+    const handleConnect = () => {
+      console.log(
+        "🟢 Notification socket connected:",
+        socket.id
+      );
     };
 
-    // listen for persisted notification events (sent when server creates them)
-    const handleNewPersisted = (n) => {
-      const notification = {
-        id: n.id || n._id,
-        _id: n.id || n._id,
-        type: n.type,
-        message: n.message,
-        time: n.createdAt ? new Date(n.createdAt) : new Date(),
-        taskId: n.task,
-        projectId: n.project,
-      };
-
-      setNotifications((prev) => [notification, ...prev]);
+    const handleConnectError = (error) => {
+      console.error(
+        "🔴 Notification socket error:",
+        error.message
+      );
     };
 
-    // ============================
+    // ------------------------------------------
     // Socket listeners
-    // ============================
+    // ------------------------------------------
 
     socket.on(
-      "newComment",
-      handleNewComment
+      "connect",
+      handleConnect
     );
 
     socket.on(
-      "taskCreated",
-      handleTaskCreated
+      "connect_error",
+      handleConnectError
     );
 
     socket.on(
-      "taskUpdated",
-      handleTaskUpdated
+      "newNotification",
+      handleNewNotification
     );
 
-    socket.on("newNotification", handleNewPersisted);
-
-    // ============================
+    // ------------------------------------------
     // Cleanup
-    // ============================
+    // ------------------------------------------
 
     return () => {
+      if (!socket) {
+        return;
+      }
+
       socket.off(
-        "newComment",
-        handleNewComment
+        "connect",
+        handleConnect
       );
 
       socket.off(
-        "taskCreated",
-        handleTaskCreated
+        "connect_error",
+        handleConnectError
       );
 
       socket.off(
-        "taskUpdated",
-        handleTaskUpdated
+        "newNotification",
+        handleNewNotification
       );
-
-      socket.off("newNotification", handleNewPersisted);
     };
   }, []);
 
-  // ============================
+  // ------------------------------------------
   // Open notification
-  // ============================
+  // ------------------------------------------
 
-  const handleNotificationClick = (
+  const handleNotificationClick = async (
     notification
   ) => {
+    try {
+      // Mark notification as read
+      if (
+        notification._id &&
+        !notification.read
+      ) {
+        await markNotificationAsRead(
+          notification._id
+        );
+
+        setNotifications((previous) =>
+          previous.map((item) =>
+            item._id === notification._id
+              ? {
+                  ...item,
+                  read: true,
+                }
+              : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to mark notification as read:",
+        error
+      );
+    }
+
+    setShowNotifications(false);
+
+    // Open the exact task
     if (
       notification.projectId &&
       notification.taskId
     ) {
-      (async () => {
-        try {
-          if (notification._id) {
-            await markNotificationAsRead(notification._id);
-          }
-        } catch (err) {
-          console.error("Failed to mark notification read", err);
-        }
-
-        setShowNotifications(false);
-
-        navigate(
-          `/projects/${notification.projectId}?task=${notification.taskId}`
-        );
-      })();
+      navigate(
+        `/projects/${notification.projectId}?task=${notification.taskId}`
+      );
     }
   };
 
-  // ============================
-  // Clear notifications
-  // ============================
+  // ------------------------------------------
+  // Clear all notifications
+  // ------------------------------------------
 
-  const clearNotifications = () => {
-    (async () => {
-      try {
-        await clearNotificationsApi();
-        setNotifications([]);
-      } catch (err) {
-        console.error("Failed to clear notifications", err);
-      } finally {
-        setShowNotifications(false);
-      }
-    })();
+  const clearNotifications = async () => {
+    try {
+      await clearNotificationsApi();
+
+      setNotifications([]);
+    } catch (error) {
+      console.error(
+        "Failed to clear notifications:",
+        error
+      );
+    } finally {
+      setShowNotifications(false);
+    }
+  };
+
+  // ------------------------------------------
+  // Notification icon
+  // ------------------------------------------
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "comment":
+        return "💬";
+
+      case "task":
+        return "📋";
+
+      case "update":
+        return "🔄";
+
+      default:
+        return "🔔";
+    }
   };
 
   return (
     <header className="navbar">
+      {/* ------------------------------------ */}
+      {/* Left */}
+      {/* ------------------------------------ */}
 
       <div className="navbar-left">
         <h2>Dashboard</h2>
       </div>
 
+      {/* ------------------------------------ */}
+      {/* Right */}
+      {/* ------------------------------------ */}
+
       <div className="navbar-right">
+        {/* ---------------------------------- */}
+        {/* Notifications */}
+        {/* ---------------------------------- */}
 
-        {/* Notification */}
         <div className="notification-wrapper">
-
           <button
+            type="button"
             className="notification-btn"
             onClick={() =>
               setShowNotifications(
-                (prev) => !prev
+                (previous) => !previous
               )
             }
           >
@@ -226,66 +295,65 @@ function Navbar() {
 
           {showNotifications && (
             <div className="notification-panel">
+              {/* Header */}
 
               <div className="notification-header">
-
-                <h3>
-                  Notifications
-                </h3>
+                <h3>Notifications</h3>
 
                 {notifications.length > 0 && (
                   <button
+                    type="button"
+                    className="clear-btn"
                     onClick={
                       clearNotifications
                     }
-                    className="clear-btn"
                   >
                     Clear
                   </button>
                 )}
-
               </div>
 
-              {notifications.length ===
-              0 ? (
-                <div className="empty-notifications">
+              {/* Empty state */}
 
+              {notifications.length === 0 ? (
+                <div className="empty-notifications">
                   <span>🔔</span>
 
                   <p>
                     No new notifications
                   </p>
-
                 </div>
               ) : (
                 <div className="notification-list">
-
                   {notifications.map(
                     (notification) => (
                       <div
                         key={
-                          notification.id
+                          notification.id ||
+                          notification._id
                         }
-                        className="notification-item"
+                        className={`notification-item ${
+                          notification.read
+                            ? "read"
+                            : "unread"
+                        }`}
                         onClick={() =>
                           handleNotificationClick(
                             notification
                           )
                         }
                       >
+                        {/* Icon */}
 
                         <div className="notification-icon">
-                          {notification.type ===
-                          "comment"
-                            ? "💬"
-                            : notification.type ===
-                              "task"
-                            ? "📋"
-                            : "🔄"}
+                          {getNotificationIcon(
+                            notification.type
+                          )}
                         </div>
 
-                        <div className="notification-content">
+                        {/* Content */}
 
+                        <div className="notification-content">
                           <p>
                             {
                               notification.message
@@ -294,55 +362,51 @@ function Navbar() {
 
                           <span>
                             {notification.time
-                              ? new Date(notification.time).toLocaleString()
+                              ? new Date(
+                                  notification.time
+                                ).toLocaleString()
                               : notification.createdAt
-                              ? new Date(notification.createdAt).toLocaleString()
+                              ? new Date(
+                                  notification.createdAt
+                                ).toLocaleString()
                               : "Just now"}
                           </span>
-
                         </div>
+
+                        {/* Arrow */}
 
                         <div className="notification-arrow">
                           →
                         </div>
-
                       </div>
                     )
                   )}
-
                 </div>
               )}
-
             </div>
           )}
-
         </div>
 
+        {/* ---------------------------------- */}
         {/* User */}
-        <div className="user-info">
+        {/* ---------------------------------- */}
 
+        <div className="user-info">
           <div className="avatar">
             {user.name
-              .charAt(0)
-              .toUpperCase()}
+              ?.charAt(0)
+              .toUpperCase() || "U"}
           </div>
 
           <div>
-
             <h4>
-              {user.name}
+              {user.name || "User"}
             </h4>
 
-            <span>
-              Welcome Back
-            </span>
-
+            <span>Welcome Back</span>
           </div>
-
         </div>
-
       </div>
-
     </header>
   );
 }
