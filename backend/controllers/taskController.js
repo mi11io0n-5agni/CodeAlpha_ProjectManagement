@@ -16,10 +16,6 @@ export const createTask = async (req, res) => {
       dueDate,
     } = req.body;
 
-    // ------------------------------------------
-    // Validate title
-    // ------------------------------------------
-
     if (!title) {
       return res.status(400).json({
         success: false,
@@ -27,20 +23,12 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Validate project ID
-    // ------------------------------------------
-
     if (!projectId) {
       return res.status(400).json({
         success: false,
         message: "Project ID is required",
       });
     }
-
-    // ------------------------------------------
-    // Check project
-    // ------------------------------------------
 
     const project = await Project.findById(projectId);
 
@@ -50,10 +38,6 @@ export const createTask = async (req, res) => {
         message: "Project not found",
       });
     }
-
-    // ------------------------------------------
-    // Create task
-    // ------------------------------------------
 
     const task = await Task.create({
       title,
@@ -65,27 +49,21 @@ export const createTask = async (req, res) => {
       dueDate,
     });
 
-    // ------------------------------------------
-    // Real-time board update
-    // ------------------------------------------
-
     const io = req.app.get("io");
 
+    // Real-time board update
     if (io) {
-      io.to(projectId.toString()).emit("taskCreated", task);
+      io.to(projectId.toString()).emit(
+        "taskCreated",
+        task
+      );
     }
 
-    // ------------------------------------------
-    // Personal notification
-    //
-    // Only the assigned user receives it.
-    // The creator does not receive their own
-    // assignment notification.
-    // ------------------------------------------
-
+    // Notify assigned member only
     if (
       assignedTo &&
-      assignedTo.toString() !== req.user._id.toString()
+      assignedTo.toString() !==
+        req.user._id.toString()
     ) {
       await createNotification({
         recipientId: assignedTo,
@@ -99,10 +77,6 @@ export const createTask = async (req, res) => {
         app: req.app,
       });
     }
-
-    // ------------------------------------------
-    // Response
-    // ------------------------------------------
 
     return res.status(201).json({
       success: true,
@@ -206,13 +180,8 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Remember old status
-    // ------------------------------------------
-
     const previousStatus = task.status;
 
-    // Nothing changed
     if (previousStatus === newStatus) {
       return res.status(200).json({
         success: true,
@@ -221,20 +190,13 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Update status
-    // ------------------------------------------
-
     task.status = newStatus;
 
     await task.save();
 
-    // ------------------------------------------
-    // Real-time project update
-    // ------------------------------------------
-
     const io = req.app.get("io");
 
+    // Update board in real time
     if (io) {
       io.to(task.project.toString()).emit(
         "taskUpdated",
@@ -242,20 +204,26 @@ export const updateTaskStatus = async (req, res) => {
       );
     }
 
-    // ------------------------------------------
-    // Notify assigned user
-    //
-    // Do not notify the person who performed
-    // the drag and drop.
-    // ------------------------------------------
+    const actorId = req.user._id.toString();
+
+    const ownerId = task.createdBy
+      ? task.createdBy.toString()
+      : null;
+
+    const assigneeId = task.assignedTo
+      ? task.assignedTo.toString()
+      : null;
+
+    // -------------------------------------------------------
+    // Notify task owner
+    // -------------------------------------------------------
 
     if (
-      task.assignedTo &&
-      task.assignedTo.toString() !==
-        req.user._id.toString()
+      ownerId &&
+      ownerId !== actorId
     ) {
       await createNotification({
-        recipientId: task.assignedTo,
+        recipientId: ownerId,
         actorId: req.user._id,
         projectId: task.project,
         taskId: task._id,
@@ -269,9 +237,32 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Populate task
-    // ------------------------------------------
+    // -------------------------------------------------------
+    // Notify assignee if the assignee is not the actor
+    // AND the assignee is not already the owner.
+    //
+    // This prevents duplicate notifications.
+    // -------------------------------------------------------
+
+    if (
+      assigneeId &&
+      assigneeId !== actorId &&
+      assigneeId !== ownerId
+    ) {
+      await createNotification({
+        recipientId: assigneeId,
+        actorId: req.user._id,
+        projectId: task.project,
+        taskId: task._id,
+        type: "update",
+        message: `${
+          req.user.name || "Someone"
+        } moved "${task.title}" from ${formatStatus(
+          previousStatus
+        )} to ${formatStatus(newStatus)}`,
+        app: req.app,
+      });
+    }
 
     await task.populate("assignedTo", "name email");
     await task.populate("createdBy", "name email");
@@ -282,7 +273,10 @@ export const updateTaskStatus = async (req, res) => {
       task,
     });
   } catch (error) {
-    console.error("Update task status error:", error);
+    console.error(
+      "Update task status error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
@@ -294,8 +288,8 @@ export const updateTaskStatus = async (req, res) => {
 /**
  * Update task
  *
- * Handles title, description, priority, due date,
- * status and assignment.
+ * Handles title, description, priority,
+ * due date, status and assignment.
  */
 export const updateTask = async (req, res) => {
   try {
@@ -308,10 +302,6 @@ export const updateTask = async (req, res) => {
       assignedTo,
     } = req.body;
 
-    // ------------------------------------------
-    // Find task
-    // ------------------------------------------
-
     const task = await Task.findById(req.params.id);
 
     if (!task) {
@@ -321,9 +311,9 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Remember previous values BEFORE update
-    // ------------------------------------------
+    // -------------------------------------------------------
+    // Remember old values
+    // -------------------------------------------------------
 
     const previousAssignee =
       task.assignedTo?.toString() || null;
@@ -334,27 +324,27 @@ export const updateTask = async (req, res) => {
     const previousStatus = task.status;
     const previousDueDate = task.dueDate;
 
-    // ------------------------------------------
-    // Update fields
-    // ------------------------------------------
+    // -------------------------------------------------------
+    // Update
+    // -------------------------------------------------------
 
     task.title = title ?? task.title;
     task.description =
       description ?? task.description;
-    task.priority = priority ?? task.priority;
-    task.status = status ?? task.status;
-    task.dueDate = dueDate ?? task.dueDate;
+    task.priority =
+      priority ?? task.priority;
+    task.status =
+      status ?? task.status;
+    task.dueDate =
+      dueDate ?? task.dueDate;
     task.assignedTo =
       assignedTo ?? task.assignedTo;
 
     await task.save();
 
-    // ------------------------------------------
-    // Real-time project update
-    // ------------------------------------------
-
     const io = req.app.get("io");
 
+    // Real-time board update
     if (io) {
       io.to(task.project.toString()).emit(
         "taskUpdated",
@@ -362,12 +352,18 @@ export const updateTask = async (req, res) => {
       );
     }
 
-    // ------------------------------------------
+    // -------------------------------------------------------
     // Detect changes
-    // ------------------------------------------
+    // -------------------------------------------------------
 
     const newAssignee =
       task.assignedTo?.toString() || null;
+
+    const ownerId = task.createdBy
+      ? task.createdBy.toString()
+      : null;
+
+    const actorId = req.user._id.toString();
 
     const assignmentChanged =
       previousAssignee !== newAssignee;
@@ -376,7 +372,8 @@ export const updateTask = async (req, res) => {
       previousTitle !== task.title;
 
     const descriptionChanged =
-      previousDescription !== task.description;
+      previousDescription !==
+      task.description;
 
     const priorityChanged =
       previousPriority !== task.priority;
@@ -395,39 +392,44 @@ export const updateTask = async (req, res) => {
       statusChanged ||
       dueDateChanged;
 
-    // ------------------------------------------
-    // DEBUG
-    // ------------------------------------------
-
-    console.log("========== TASK UPDATE ==========");
+    console.log(
+      "========== TASK UPDATE =========="
+    );
 
     console.log("Task:", task.title);
 
     console.log("Updated by:", {
-      id: req.user._id.toString(),
+      id: actorId,
       name: req.user.name,
     });
 
+    console.log("Owner:", ownerId);
     console.log("Previous assignee:", previousAssignee);
     console.log("New assignee:", newAssignee);
 
-    console.log("Assignment changed:", assignmentChanged);
-    console.log("Title changed:", titleChanged);
-    console.log("Description changed:", descriptionChanged);
-    console.log("Priority changed:", priorityChanged);
-    console.log("Status changed:", statusChanged);
-    console.log("Due date changed:", dueDateChanged);
+    console.log(
+      "Assignment changed:",
+      assignmentChanged
+    );
 
-    console.log("=================================");
+    console.log(
+      "Task details changed:",
+      taskDetailsChanged
+    );
 
-    // ========================================================
-    // CASE 1: NEW ASSIGNEE
-    // ========================================================
+    console.log(
+      "================================="
+    );
+
+    // -------------------------------------------------------
+    // CASE 1
+    // New assignee
+    // -------------------------------------------------------
 
     if (
       assignmentChanged &&
       newAssignee &&
-      newAssignee !== req.user._id.toString()
+      newAssignee !== actorId
     ) {
       await createNotification({
         recipientId: newAssignee,
@@ -442,19 +444,17 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // ========================================================
-    // CASE 2: EXISTING ASSIGNEE
-    //
-    // If task details changed, notify the existing assignee.
-    // But don't notify the user who made the change.
-    // ========================================================
+    // -------------------------------------------------------
+    // CASE 2
+    // Existing assignee changed task
+    // -------------------------------------------------------
 
     if (
       !assignmentChanged &&
       taskDetailsChanged &&
-      task.assignedTo &&
-      task.assignedTo.toString() !==
-        req.user._id.toString()
+      newAssignee &&
+      newAssignee !== actorId &&
+      newAssignee !== ownerId
     ) {
       const changes = [];
 
@@ -479,7 +479,7 @@ export const updateTask = async (req, res) => {
       }
 
       await createNotification({
-        recipientId: task.assignedTo,
+        recipientId: newAssignee,
         actorId: req.user._id,
         projectId: task.project,
         taskId: task._id,
@@ -493,17 +493,72 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // ========================================================
-    // CASE 3: REASSIGNMENT
+    // -------------------------------------------------------
+    // CASE 3
+    // Owner notification
     //
-    // Previous assignee is no longer assigned.
-    // Notify them that the task was reassigned.
-    // ========================================================
+    // This is the important fix.
+    //
+    // If another member edits the task, the owner gets
+    // notified.
+    // -------------------------------------------------------
+
+    if (
+      taskDetailsChanged &&
+      ownerId &&
+      ownerId !== actorId
+    ) {
+      const changes = [];
+
+      if (titleChanged) {
+        changes.push("title");
+      }
+
+      if (descriptionChanged) {
+        changes.push("description");
+      }
+
+      if (priorityChanged) {
+        changes.push("priority");
+      }
+
+      if (statusChanged) {
+        changes.push("status");
+      }
+
+      if (dueDateChanged) {
+        changes.push("due date");
+      }
+
+      // Avoid duplicate owner notification if owner is
+      // also the new assignee.
+      if (ownerId !== newAssignee) {
+        await createNotification({
+          recipientId: ownerId,
+          actorId: req.user._id,
+          projectId: task.project,
+          taskId: task._id,
+          type: "update",
+          message: `${
+            req.user.name || "Someone"
+          } updated ${changes.join(
+            ", "
+          )} on your task: ${task.title}`,
+          app: req.app,
+        });
+      }
+    }
+
+    // -------------------------------------------------------
+    // CASE 4
+    // Previous assignee was removed
+    // -------------------------------------------------------
 
     if (
       assignmentChanged &&
       previousAssignee &&
-      previousAssignee !== req.user._id.toString()
+      previousAssignee !== actorId &&
+      previousAssignee !== newAssignee
     ) {
       await createNotification({
         recipientId: previousAssignee,
@@ -518,16 +573,8 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
-    // Populate task
-    // ------------------------------------------
-
     await task.populate("assignedTo", "name email");
     await task.populate("createdBy", "name email");
-
-    // ------------------------------------------
-    // Response
-    // ------------------------------------------
 
     return res.status(200).json({
       success: true,
@@ -558,26 +605,33 @@ export const deleteTask = async (req, res) => {
       });
     }
 
-    // ------------------------------------------
+    // -------------------------------------------------------
     // Save information BEFORE deleting
-    // ------------------------------------------
+    // -------------------------------------------------------
 
     const taskId = task._id;
     const projectId = task.project;
     const taskTitle = task.title;
+
+    const ownerId = task.createdBy
+      ? task.createdBy.toString()
+      : null;
+
     const assignedUser = task.assignedTo
       ? task.assignedTo.toString()
       : null;
 
-    // ------------------------------------------
-    // Delete task
-    // ------------------------------------------
+    const actorId = req.user._id.toString();
+
+    // -------------------------------------------------------
+    // Delete
+    // -------------------------------------------------------
 
     await task.deleteOne();
 
-    // ------------------------------------------
+    // -------------------------------------------------------
     // Real-time delete
-    // ------------------------------------------
+    // -------------------------------------------------------
 
     const io = req.app.get("io");
 
@@ -588,16 +642,38 @@ export const deleteTask = async (req, res) => {
       );
     }
 
-    // ------------------------------------------
-    // Notify assigned user
+    // -------------------------------------------------------
+    // Notify owner
     //
-    // The person deleting the task should not
-    // receive their own notification.
-    // ------------------------------------------
+    // This is important when a member deletes the owner's
+    // task.
+    // -------------------------------------------------------
+
+    if (
+      ownerId &&
+      ownerId !== actorId
+    ) {
+      await createNotification({
+        recipientId: ownerId,
+        actorId: req.user._id,
+        projectId,
+        taskId,
+        type: "update",
+        message: `${
+          req.user.name || "Someone"
+        } deleted your task: ${taskTitle}`,
+        app: req.app,
+      });
+    }
+
+    // -------------------------------------------------------
+    // Notify assigned user if different from owner
+    // -------------------------------------------------------
 
     if (
       assignedUser &&
-      assignedUser !== req.user._id.toString()
+      assignedUser !== actorId &&
+      assignedUser !== ownerId
     ) {
       await createNotification({
         recipientId: assignedUser,
@@ -611,10 +687,6 @@ export const deleteTask = async (req, res) => {
         app: req.app,
       });
     }
-
-    // ------------------------------------------
-    // Response
-    // ------------------------------------------
 
     return res.status(200).json({
       success: true,
