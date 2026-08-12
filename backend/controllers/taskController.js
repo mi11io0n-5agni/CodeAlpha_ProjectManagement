@@ -19,6 +19,7 @@ export const createTask = async (req, res) => {
     // ------------------------------------------
     // Validate title
     // ------------------------------------------
+
     if (!title) {
       return res.status(400).json({
         success: false,
@@ -29,6 +30,7 @@ export const createTask = async (req, res) => {
     // ------------------------------------------
     // Validate project ID
     // ------------------------------------------
+
     if (!projectId) {
       return res.status(400).json({
         success: false,
@@ -39,6 +41,7 @@ export const createTask = async (req, res) => {
     // ------------------------------------------
     // Check project
     // ------------------------------------------
+
     const project = await Project.findById(projectId);
 
     if (!project) {
@@ -51,6 +54,7 @@ export const createTask = async (req, res) => {
     // ------------------------------------------
     // Create task
     // ------------------------------------------
+
     const task = await Task.create({
       title,
       description,
@@ -63,10 +67,8 @@ export const createTask = async (req, res) => {
 
     // ------------------------------------------
     // Real-time board update
-    //
-    // Everyone in the project should see the
-    // new task on the board.
     // ------------------------------------------
+
     const io = req.app.get("io");
 
     if (io) {
@@ -74,33 +76,13 @@ export const createTask = async (req, res) => {
     }
 
     // ------------------------------------------
-    // Notification debug
-    // ------------------------------------------
-    console.log("========== NOTIFICATION DEBUG ==========");
-
-    console.log("Task creator:", {
-      id: req.user._id.toString(),
-      name: req.user.name,
-    });
-
-    console.log("Task assignedTo:", {
-      id: assignedTo ? assignedTo.toString() : null,
-    });
-
-    console.log(
-      "Same user?",
-      assignedTo?.toString() === req.user._id.toString()
-    );
-
-    console.log("=========================================");
-
-    // ------------------------------------------
     // Personal notification
     //
-    // Only the assigned user receives this.
+    // Only the assigned user receives it.
     // The creator does not receive their own
-    // notification.
+    // assignment notification.
     // ------------------------------------------
+
     if (
       assignedTo &&
       assignedTo.toString() !== req.user._id.toString()
@@ -121,6 +103,7 @@ export const createTask = async (req, res) => {
     // ------------------------------------------
     // Response
     // ------------------------------------------
+
     return res.status(201).json({
       success: true,
       message: "Task created successfully",
@@ -193,6 +176,8 @@ export const getTask = async (req, res) => {
 
 /**
  * Update only the task status
+ *
+ * Used by drag and drop.
  */
 export const updateTaskStatus = async (req, res) => {
   try {
@@ -224,11 +209,22 @@ export const updateTaskStatus = async (req, res) => {
     // ------------------------------------------
     // Remember old status
     // ------------------------------------------
+
     const previousStatus = task.status;
+
+    // Nothing changed
+    if (previousStatus === newStatus) {
+      return res.status(200).json({
+        success: true,
+        message: "Task status unchanged",
+        task,
+      });
+    }
 
     // ------------------------------------------
     // Update status
     // ------------------------------------------
+
     task.status = newStatus;
 
     await task.save();
@@ -236,6 +232,7 @@ export const updateTaskStatus = async (req, res) => {
     // ------------------------------------------
     // Real-time project update
     // ------------------------------------------
+
     const io = req.app.get("io");
 
     if (io) {
@@ -246,16 +243,16 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     // ------------------------------------------
-    // Notify task assignee
+    // Notify assigned user
     //
-    // Do not notify the person who changed the
-    // task themselves.
+    // Do not notify the person who performed
+    // the drag and drop.
     // ------------------------------------------
+
     if (
       task.assignedTo &&
       task.assignedTo.toString() !==
-        req.user._id.toString() &&
-      previousStatus !== newStatus
+        req.user._id.toString()
     ) {
       await createNotification({
         recipientId: task.assignedTo,
@@ -265,7 +262,9 @@ export const updateTaskStatus = async (req, res) => {
         type: "update",
         message: `${
           req.user.name || "Someone"
-        } changed "${task.title}" from ${previousStatus} to ${newStatus}`,
+        } moved "${task.title}" from ${formatStatus(
+          previousStatus
+        )} to ${formatStatus(newStatus)}`,
         app: req.app,
       });
     }
@@ -273,12 +272,13 @@ export const updateTaskStatus = async (req, res) => {
     // ------------------------------------------
     // Populate task
     // ------------------------------------------
+
     await task.populate("assignedTo", "name email");
     await task.populate("createdBy", "name email");
 
     return res.status(200).json({
       success: true,
-      message: "Task updated",
+      message: "Task status updated successfully",
       task,
     });
   } catch (error) {
@@ -293,6 +293,9 @@ export const updateTaskStatus = async (req, res) => {
 
 /**
  * Update task
+ *
+ * Handles title, description, priority, due date,
+ * status and assignment.
  */
 export const updateTask = async (req, res) => {
   try {
@@ -308,6 +311,7 @@ export const updateTask = async (req, res) => {
     // ------------------------------------------
     // Find task
     // ------------------------------------------
+
     const task = await Task.findById(req.params.id);
 
     if (!task) {
@@ -318,14 +322,22 @@ export const updateTask = async (req, res) => {
     }
 
     // ------------------------------------------
-    // Remember previous assignee
+    // Remember previous values BEFORE update
     // ------------------------------------------
+
     const previousAssignee =
       task.assignedTo?.toString() || null;
+
+    const previousTitle = task.title;
+    const previousDescription = task.description;
+    const previousPriority = task.priority;
+    const previousStatus = task.status;
+    const previousDueDate = task.dueDate;
 
     // ------------------------------------------
     // Update fields
     // ------------------------------------------
+
     task.title = title ?? task.title;
     task.description =
       description ?? task.description;
@@ -339,10 +351,8 @@ export const updateTask = async (req, res) => {
 
     // ------------------------------------------
     // Real-time project update
-    //
-    // Everyone in the project should see the
-    // updated task.
     // ------------------------------------------
+
     const io = req.app.get("io");
 
     if (io) {
@@ -353,46 +363,70 @@ export const updateTask = async (req, res) => {
     }
 
     // ------------------------------------------
-    // Detect reassignment
+    // Detect changes
     // ------------------------------------------
+
     const newAssignee =
       task.assignedTo?.toString() || null;
 
     const assignmentChanged =
-      newAssignee &&
-      newAssignee !== previousAssignee;
+      previousAssignee !== newAssignee;
+
+    const titleChanged =
+      previousTitle !== task.title;
+
+    const descriptionChanged =
+      previousDescription !== task.description;
+
+    const priorityChanged =
+      previousPriority !== task.priority;
+
+    const statusChanged =
+      previousStatus !== task.status;
+
+    const dueDateChanged =
+      String(previousDueDate || "") !==
+      String(task.dueDate || "");
+
+    const taskDetailsChanged =
+      titleChanged ||
+      descriptionChanged ||
+      priorityChanged ||
+      statusChanged ||
+      dueDateChanged;
 
     // ------------------------------------------
-    // Notification debug
+    // DEBUG
     // ------------------------------------------
-    console.log("========== ASSIGNMENT DEBUG ==========");
 
-    console.log("Task updater:", {
+    console.log("========== TASK UPDATE ==========");
+
+    console.log("Task:", task.title);
+
+    console.log("Updated by:", {
       id: req.user._id.toString(),
       name: req.user.name,
     });
 
     console.log("Previous assignee:", previousAssignee);
-
     console.log("New assignee:", newAssignee);
 
-    console.log(
-      "Assignment changed:",
-      assignmentChanged
-    );
+    console.log("Assignment changed:", assignmentChanged);
+    console.log("Title changed:", titleChanged);
+    console.log("Description changed:", descriptionChanged);
+    console.log("Priority changed:", priorityChanged);
+    console.log("Status changed:", statusChanged);
+    console.log("Due date changed:", dueDateChanged);
 
-    console.log(
-      "Is new assignee the updater?",
-      newAssignee === req.user._id.toString()
-    );
+    console.log("=================================");
 
-    console.log("=======================================");
+    // ========================================================
+    // CASE 1: NEW ASSIGNEE
+    // ========================================================
 
-    // ------------------------------------------
-    // Notify NEW assignee only
-    // ------------------------------------------
     if (
       assignmentChanged &&
+      newAssignee &&
       newAssignee !== req.user._id.toString()
     ) {
       await createNotification({
@@ -408,15 +442,93 @@ export const updateTask = async (req, res) => {
       });
     }
 
+    // ========================================================
+    // CASE 2: EXISTING ASSIGNEE
+    //
+    // If task details changed, notify the existing assignee.
+    // But don't notify the user who made the change.
+    // ========================================================
+
+    if (
+      !assignmentChanged &&
+      taskDetailsChanged &&
+      task.assignedTo &&
+      task.assignedTo.toString() !==
+        req.user._id.toString()
+    ) {
+      const changes = [];
+
+      if (titleChanged) {
+        changes.push("title");
+      }
+
+      if (descriptionChanged) {
+        changes.push("description");
+      }
+
+      if (priorityChanged) {
+        changes.push("priority");
+      }
+
+      if (statusChanged) {
+        changes.push("status");
+      }
+
+      if (dueDateChanged) {
+        changes.push("due date");
+      }
+
+      await createNotification({
+        recipientId: task.assignedTo,
+        actorId: req.user._id,
+        projectId: task.project,
+        taskId: task._id,
+        type: "update",
+        message: `${
+          req.user.name || "Someone"
+        } updated ${changes.join(
+          ", "
+        )} on your task: ${task.title}`,
+        app: req.app,
+      });
+    }
+
+    // ========================================================
+    // CASE 3: REASSIGNMENT
+    //
+    // Previous assignee is no longer assigned.
+    // Notify them that the task was reassigned.
+    // ========================================================
+
+    if (
+      assignmentChanged &&
+      previousAssignee &&
+      previousAssignee !== req.user._id.toString()
+    ) {
+      await createNotification({
+        recipientId: previousAssignee,
+        actorId: req.user._id,
+        projectId: task.project,
+        taskId: task._id,
+        type: "update",
+        message: `${
+          req.user.name || "Someone"
+        } reassigned the task "${task.title}" to another member`,
+        app: req.app,
+      });
+    }
+
     // ------------------------------------------
     // Populate task
     // ------------------------------------------
+
     await task.populate("assignedTo", "name email");
     await task.populate("createdBy", "name email");
 
     // ------------------------------------------
     // Response
     // ------------------------------------------
+
     return res.status(200).json({
       success: true,
       message: "Task updated successfully",
@@ -446,19 +558,63 @@ export const deleteTask = async (req, res) => {
       });
     }
 
+    // ------------------------------------------
+    // Save information BEFORE deleting
+    // ------------------------------------------
+
+    const taskId = task._id;
+    const projectId = task.project;
+    const taskTitle = task.title;
+    const assignedUser = task.assignedTo
+      ? task.assignedTo.toString()
+      : null;
+
+    // ------------------------------------------
+    // Delete task
+    // ------------------------------------------
+
     await task.deleteOne();
 
     // ------------------------------------------
     // Real-time delete
     // ------------------------------------------
+
     const io = req.app.get("io");
 
     if (io) {
-      io.to(task.project.toString()).emit(
+      io.to(projectId.toString()).emit(
         "taskDeleted",
-        task._id
+        taskId
       );
     }
+
+    // ------------------------------------------
+    // Notify assigned user
+    //
+    // The person deleting the task should not
+    // receive their own notification.
+    // ------------------------------------------
+
+    if (
+      assignedUser &&
+      assignedUser !== req.user._id.toString()
+    ) {
+      await createNotification({
+        recipientId: assignedUser,
+        actorId: req.user._id,
+        projectId,
+        taskId,
+        type: "update",
+        message: `${
+          req.user.name || "Someone"
+        } deleted your assigned task: ${taskTitle}`,
+        app: req.app,
+      });
+    }
+
+    // ------------------------------------------
+    // Response
+    // ------------------------------------------
 
     return res.status(200).json({
       success: true,
@@ -472,4 +628,18 @@ export const deleteTask = async (req, res) => {
       message: "Server Error",
     });
   }
+};
+
+/**
+ * Convert internal status value into readable text.
+ */
+const formatStatus = (status) => {
+  const statusLabels = {
+    todo: "Todo",
+    "in-progress": "In Progress",
+    review: "Review",
+    done: "Done",
+  };
+
+  return statusLabels[status] || status;
 };
